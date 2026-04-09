@@ -17,7 +17,6 @@
       --shadow2:0 10px 24px rgba(2,6,23,.08);
       --danger:#b91c1c;
       --ok:#0a7a3b;
-      --warn:#b45309;
       --radius:18px;
     }
 
@@ -32,7 +31,8 @@
         var(--bg);
     }
 
-    .wrap{max-width:1500px;margin:0 auto;padding:18px}
+    .wrap{max-width:1520px;margin:0 auto;padding:18px}
+
     .top{
       background:linear-gradient(135deg,var(--brand),var(--brand2));
       color:#fff;
@@ -87,35 +87,11 @@
       position:relative;
     }
 
-    .nav{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin:18px 0;
-    }
-    .tabBtn{
-      border:none;
-      cursor:pointer;
-      padding:12px 16px;
-      border-radius:14px;
-      background:#fff;
-      color:var(--ink);
-      font-weight:1000;
-      box-shadow:var(--shadow2);
-      border:1px solid rgba(15,23,42,.06);
-      transition:.16s ease;
-    }
-    .tabBtn.active{
-      background:linear-gradient(135deg,var(--brand),var(--brand2));
-      color:#fff;
-      transform:translateY(-1px);
-    }
-
     .gridTop{
       display:grid;
       grid-template-columns:repeat(4,minmax(0,1fr));
       gap:16px;
-      margin-bottom:18px;
+      margin:18px 0;
     }
     @media (max-width:1100px){
       .gridTop{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -151,6 +127,30 @@
       font-weight:800;
     }
 
+    .nav{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:0 0 18px;
+    }
+    .tabBtn{
+      border:none;
+      cursor:pointer;
+      padding:12px 16px;
+      border-radius:14px;
+      background:#fff;
+      color:var(--ink);
+      font-weight:1000;
+      box-shadow:var(--shadow2);
+      border:1px solid rgba(15,23,42,.06);
+      transition:.16s ease;
+    }
+    .tabBtn.active{
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      transform:translateY(-1px);
+    }
+
     .panel{
       display:none;
       background:var(--card);
@@ -162,7 +162,7 @@
     .panel.active{display:block}
 
     .panelHead{
-      padding:18px 18px 8px;
+      padding:18px 18px 10px;
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
@@ -180,11 +180,10 @@
       font-size:13px;
       font-weight:800;
     }
-
     .panelTools{
       display:flex;
-      flex-wrap:wrap;
       gap:10px;
+      flex-wrap:wrap;
       align-items:center;
     }
 
@@ -208,12 +207,17 @@
       border:1px solid var(--line);
       box-shadow:none;
     }
+    .btn.danger{
+      background:linear-gradient(135deg,#dc2626,#991b1b);
+      box-shadow:0 10px 20px rgba(185,28,28,.18);
+    }
 
     .searchRow{
       padding:0 18px 16px;
       display:flex;
       gap:10px;
       flex-wrap:wrap;
+      align-items:center;
     }
     .searchRow input{
       flex:1;
@@ -227,12 +231,71 @@
       background:#fff;
     }
 
+    .addBox{
+      margin:0 18px 16px;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:16px;
+    }
+    .addBox h3{
+      margin:0 0 12px;
+      font-size:16px;
+      font-weight:1000;
+    }
+    .addGrid{
+      display:grid;
+      grid-template-columns: 1.4fr .8fr;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    @media (max-width:820px){
+      .addGrid{grid-template-columns:1fr}
+    }
+    .field label{
+      display:block;
+      margin-bottom:6px;
+      font-size:12px;
+      font-weight:1000;
+      color:var(--muted);
+    }
+    .field input{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:11px 12px;
+      font-size:14px;
+      font-weight:800;
+      outline:none;
+      background:#fff;
+    }
+    .checks{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .checkItem{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:900;
+    }
+    .checkItem input{
+      width:18px;height:18px;
+      accent-color:var(--brand);
+    }
+
     .tableWrap{
       width:100%;
       overflow:auto;
       padding:0 18px 18px;
     }
-
     table{
       width:max-content;
       min-width:100%;
@@ -243,7 +306,7 @@
     thead th{
       position:sticky;
       top:0;
-      z-index:2;
+      z-index:3;
       background:#f8fafc;
       color:#0f172a;
       border-bottom:1px solid var(--line);
@@ -261,7 +324,6 @@
       border-right:1px solid var(--line);
       border-top-right-radius:14px;
     }
-
     tbody td{
       padding:9px 10px;
       border-bottom:1px solid var(--line);
@@ -277,20 +339,18 @@
       background:#fbfdfb;
     }
 
-    .num{
-      text-align:right;
-      font-variant-numeric:tabular-nums;
-    }
-    .center{text-align:center}
     .stickyCol{
       position:sticky;
       left:0;
-      z-index:1;
+      z-index:2;
       background:#fff;
     }
-    tbody tr:hover .stickyCol{
-      background:#fbfdfb;
-    }
+    tbody tr:hover .stickyCol{background:#fbfdfb}
+
+    .num{text-align:right;font-variant-numeric:tabular-nums}
+    .center{text-align:center}
+    .muted{color:var(--muted)}
+    .resultGood{color:var(--ok);font-weight:1000}
 
     .inputNum{
       width:120px;
@@ -302,17 +362,6 @@
       text-align:right;
       background:#fff;
     }
-    .inputSmall{
-      width:74px;
-      border:1px solid #dbe2ea;
-      border-radius:10px;
-      padding:8px 9px;
-      font-size:13px;
-      font-weight:800;
-      text-align:right;
-      background:#fff;
-    }
-
     .checkCell{
       text-align:center;
     }
@@ -323,13 +372,14 @@
       cursor:pointer;
     }
 
-    .resultGood{
-      color:var(--ok);
-      font-weight:1000;
-    }
-    .muted{
+    .footerNote{
+      padding:0 18px 18px;
       color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      line-height:1.45;
     }
+
     .badge{
       display:inline-flex;
       align-items:center;
@@ -341,14 +391,6 @@
       background:rgba(10,122,59,.10);
       color:var(--brand);
     }
-
-    .footerNote{
-      padding:0 18px 18px;
-      color:var(--muted);
-      font-size:12px;
-      font-weight:800;
-      line-height:1.45;
-    }
   </style>
 </head>
 <body>
@@ -356,13 +398,13 @@
     <section class="top">
       <h1>Costos VDC 360°</h1>
       <p>
-        Vista HTML para trabajar la matriz de costos, costos mensuales, activos, kilos de producción y resultados.
-        Puedes editar valores directamente aquí y los resultados se recalculan al momento.
+        Matriz de costos, kilos de producción, activos y resultados. Puedes editar valores directamente,
+        recalcular al momento y también agregar nuevos costos si sale alguno que no tenías contemplado.
       </p>
       <div class="toolbar">
+        <span class="chip">Datos actualizados</span>
         <span class="chip">Matriz editable</span>
-        <span class="chip">Resultados automáticos</span>
-        <span class="chip">Sin depender del Excel</span>
+        <span class="chip">Agregar nuevos costos</span>
       </div>
     </section>
 
@@ -370,12 +412,12 @@
       <article class="kpi">
         <div class="t">Costo mensual total cargado</div>
         <div class="v" id="kpiTotalCost">$0</div>
-        <div class="s">Suma de conceptos en la matriz</div>
+        <div class="s">Suma de conceptos de la matriz</div>
       </article>
       <article class="kpi">
         <div class="t">Kg mensuales totales</div>
-        <div class="v" id="kpiKg">$0</div>
-        <div class="s">Suma de producción mensual</div>
+        <div class="v" id="kpiKg">0</div>
+        <div class="s">Suma total de producción</div>
       </article>
       <article class="kpi">
         <div class="t">Productos activos</div>
@@ -406,7 +448,7 @@
         <table id="tblResultados"></table>
       </div>
       <div class="footerNote">
-        La lógica aplicada aquí para el costo total es la que aparece visible en la fórmula del archivo: cada costo se divide entre los productos marcados con “X” en esa fila.
+        La lógica usada aquí reparte cada costo entre los productos marcados con “X”.
       </div>
     </section>
 
@@ -414,16 +456,40 @@
       <div class="panelHead">
         <div>
           <h2>Matriz</h2>
-          <p>Edita costos y activa o desactiva productos por concepto.</p>
+          <p>Edita costos, activa o desactiva productos y agrega nuevos conceptos.</p>
         </div>
         <div class="panelTools">
           <button class="btn" id="btnGuardar">Guardar en navegador</button>
           <button class="btn ghost" id="btnExportJson">Exportar JSON</button>
         </div>
       </div>
+
       <div class="searchRow">
         <input type="text" id="searchMatriz" placeholder="Buscar concepto dentro de la matriz..." />
       </div>
+
+      <div class="addBox">
+        <h3>Agregar nuevo costo</h3>
+        <div class="addGrid">
+          <div class="field">
+            <label>Nombre del concepto</label>
+            <input type="text" id="newConcepto" placeholder="Ej. Bolsa especial, refacción, herramienta, etc." />
+          </div>
+          <div class="field">
+            <label>Costo mensual</label>
+            <input type="number" id="newCosto" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+
+        <div class="checks" id="newCostChecks"></div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn" id="btnAgregarCosto">Agregar costo</button>
+          <button class="btn ghost" id="btnMarcarTodos">Marcar todos</button>
+          <button class="btn ghost" id="btnLimpiarTodos">Limpiar todos</button>
+        </div>
+      </div>
+
       <div class="tableWrap">
         <table id="tblMatriz"></table>
       </div>
@@ -479,7 +545,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "vdc_costos_html_v1";
+    const STORAGE_KEY = "vdc_costos_html_v2";
 
     const productKeys = [
       "Bofe","Corazon","Tripa","Cabeza","Cuajo","Libro","Menudo","Pata Sucia","Teleco","Higado","Sebo"
@@ -487,70 +553,71 @@
 
     const stateDefault = {
       matriz: [
-        { concepto:"Flete", costo:294000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Mano de obra", costo:414000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Luz Granja", costo:4712, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
-        { concepto:"Luz bodega", costo:52949, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Agua", costo:21157, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Gas", costo:26000, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
-        { concepto:"Mantenimiento", costo:10000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Telcel", costo:15085, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Combustible", costo:44000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Almuerzos", costo:20400, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Hielo", costo:30000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Marketing", costo:7500, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Materiales", costo:0, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:0,Menudo:0,"Pata Sucia":0,Teleco:0,Higado:0,Sebo:0} },
-        { concepto:"Escobas", costo:500, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Cuchillos", costo:235, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Botas", costo:550, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Mandiles", costo:180, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Cubetas", costo:50, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Faja", costo:400, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Guantes", costo:1250, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Mantenimiento Refacciones Camioneta", costo:4900, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Servicio", costo:6000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Articulos Limpieza", costo:40595, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Quimica", costo:3125.86, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
-        { concepto:"Carretillas", costo:6500, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Refacciones maquina de menudo y mante", costo:2000, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
-        { concepto:"Renta inmueble", costo:75000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"IMSS INFONAVIT", costo:80000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Impuestos", costo:60000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Contrato basura", costo:5000, marks:{Bofe:0,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Paneles solares", costo:25000, marks:{Bofe:0,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Refrigeradores", costo:10000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Sierras de carne", costo:10416.67, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:1,Cuajo:0,Libro:0,Menudo:0,"Pata Sucia":0,Teleco:0,Higado:0,Sebo:0} },
-        { concepto:"Chevrolet nueva", costo:6250, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Camionta nissan seminueva", costo:4687.5, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Camioneta nissan blanca 2", costo:4687.5, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Camioneta nissan blanca", costo:4687.5, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Camioneta nissan gris", costo:4687.5, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Camioneta ulises", costo:3125, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Monta cargas", costo:4750, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:1,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
-        { concepto:"Maquina Menudo", costo:2083.33, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
-        { concepto:"Chevrolet vieja", costo:1562.5, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Macrobins", costo:1258.33, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Equipo computo", costo:833.33, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Mesas", costo:500, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Patines", costo:291.67, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Basculas", costo:104.17, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Tambos basura", costo:41.67, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
-        { concepto:"Despezuñadora", costo:31.25, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:0,Menudo:0,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
-        { concepto:"Cajas fruteras", costo:31.25, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:0,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":0,Teleco:0,Higado:1,Sebo:0} }
+        {"concepto":"Materia prima","costo":5445400,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Mano de obra","costo":414000,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Luz Granja","costo":4712,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Luz bodega","costo":52949,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Agua","costo":21157,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Gas","costo":26000,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Mantenimiento","costo":10000,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Telcel","costo":15085,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Combustible","costo":44000,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Almuerzos","costo":20400,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Hielo","costo":30000,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Marketing","costo":7500,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Materiales","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":0,"Menudo":0,"Pata Sucia":0,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Escobas","costo":500,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Cuchillos","costo":235,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Botas","costo":550,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Mandiles","costo":180,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Cubetas","costo":50,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Faja","costo":400,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Guantes","costo":1250,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Mantenimiento Refacciones Camioneta","costo":4900,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Servicio","costo":6000,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Articulos Limpieza","costo":40595,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Quimica","costo":3125.86,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Carretillas","costo":6500,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Refacciones maquina de menudo y mante","costo":2000,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Renta inmueble","costo":75000,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"IMSS INFONAVIT","costo":80000,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Impuestos","costo":60000,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Contrato basura","costo":5000,"marks":{"Bofe":0,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Paneles solares","costo":25000,"marks":{"Bofe":0,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Refrigeradores","costo":10000,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Sierras de carne","costo":10416.67,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":1,"Cuajo":0,"Libro":0,"Menudo":0,"Pata Sucia":0,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Chevrolet nueva","costo":6250,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Camionta nissan seminueva","costo":4687.5,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Camioneta nissan blanca 2","costo":4687.5,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Camioneta nissan blanca","costo":4687.5,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Camioneta nissan gris","costo":4687.5,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Camioneta ulises","costo":3125,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Monta cargas","costo":4750,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":1,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Maquina Menudo","costo":2083.33,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Chevrolet vieja","costo":1562.5,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Macrobins","costo":1258.33,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Equipo computo","costo":833.33,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Mesas","costo":500,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Patines","costo":291.67,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Basculas","costo":104.17,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Tambos basura","costo":41.67,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Despezuñadora","costo":31.25,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":0,"Menudo":0,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Cajas fruteras","costo":31.25,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":0,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":0,"Teleco":0,"Higado":1,"Sebo":0}},
+        {"concepto":"bolsas","costo":6000,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}}
       ],
 
       kgProduccion: [
-        { producto:"Bofe", kgMes:4809, fechas:{"2026-03-03":276,"2026-03-05":550,"2026-03-06":391,"2026-03-10":276,"2026-03-12":558.8,"2026-03-13":391,"2026-03-19":481.6,"2026-03-20":368.6,"2026-03-24":409.8,"2026-03-26":405,"2026-03-27":329.2,"2026-03-31":372} },
-        { producto:"Corazon", kgMes:3860.6, fechas:{"2026-03-03":363.4,"2026-03-05":111,"2026-03-06":360.5,"2026-03-10":375.2,"2026-03-12":361,"2026-03-13":382,"2026-03-19":255.8,"2026-03-20":320.6,"2026-03-24":384.6,"2026-03-26":246,"2026-03-27":373.5,"2026-03-31":327} },
-        { producto:"Tripa", kgMes:32056.9, fechas:{"2026-03-03":2211.6,"2026-03-05":2432,"2026-03-06":2545.5,"2026-03-10":2546.5,"2026-03-12":3256.7,"2026-03-13":2498,"2026-03-19":3081,"2026-03-20":2515.4,"2026-03-24":2516.1,"2026-03-26":2897,"2026-03-27":2913.5,"2026-03-31":2643.6} },
-        { producto:"Cabeza", kgMes:38679.5, fechas:{"2026-03-03":3094.8,"2026-03-05":2818.5,"2026-03-06":3054.5,"2026-03-10":3159,"2026-03-12":3192.5,"2026-03-13":3382,"2026-03-19":3581.8,"2026-03-20":3330.4,"2026-03-24":3417,"2026-03-26":3532,"2026-03-27":3106,"2026-03-31":3011} },
-        { producto:"Cuajo", kgMes:2861.2, fechas:{"2026-03-03":231,"2026-03-05":198,"2026-03-06":236,"2026-03-10":245.2,"2026-03-12":236.5,"2026-03-13":244,"2026-03-19":253,"2026-03-20":253.5,"2026-03-24":251,"2026-03-26":233,"2026-03-27":251,"2026-03-31":229} },
-        { producto:"Libro", kgMes:3770, fechas:{"2026-03-03":302,"2026-03-05":301,"2026-03-06":304,"2026-03-10":363,"2026-03-12":293,"2026-03-13":338,"2026-03-19":304,"2026-03-20":334,"2026-03-24":327,"2026-03-26":270,"2026-03-27":312,"2026-03-31":322} },
-        { producto:"Menudo", kgMes:23960.2, fechas:{"2026-03-03":1969.5,"2026-03-05":846.6,"2026-03-06":2105,"2026-03-10":2270,"2026-03-12":2786,"2026-03-13":2008,"2026-03-19":1985,"2026-03-20":2078.5,"2026-03-24":2255,"2026-03-26":1750.1,"2026-03-27":1957.5,"2026-03-31":1949} },
-        { producto:"Pata Sucia", kgMes:25297, fechas:{"2026-03-03":1848,"2026-03-05":1848,"2026-03-06":2110,"2026-03-10":2052,"2026-03-12":2287,"2026-03-13":2331,"2026-03-19":2116,"2026-03-20":2187,"2026-03-24":2286,"2026-03-26":2173,"2026-03-27":2127,"2026-03-31":1932} },
-        { producto:"Teleco", kgMes:4021.5, fechas:{"2026-03-03":426.6,"2026-03-05":239,"2026-03-06":233.7,"2026-03-10":384,"2026-03-12":391.8,"2026-03-13":380.4,"2026-03-19":273,"2026-03-20":383.6,"2026-03-24":395.9,"2026-03-26":276,"2026-03-27":260.3,"2026-03-31":377.2} },
-        { producto:"Higado", kgMes:13962.4, fechas:{"2026-03-03":1088,"2026-03-05":1111.5,"2026-03-06":1087.5,"2026-03-10":1178,"2026-03-12":1149,"2026-03-13":1199,"2026-03-19":1272.4,"2026-03-20":1152,"2026-03-24":1188,"2026-03-26":1241,"2026-03-27":1196,"2026-03-31":1100} },
-        { producto:"Sebo", kgMes:0, fechas:{} }
+        {"producto":"Bofe","kgMes":4809,"fechas":{"3-mar":276,"5-mar":550,"6-mar":391,"10-mar":276,"12-mar":558.8,"13-mar":391,"19-mar":481.6,"20-mar":368.6,"24-mar":409.8,"26-mar":405,"27-mar":329.2,"31-mar":372}},
+        {"producto":"Corazon","kgMes":3860.6,"fechas":{"3-mar":363.4,"5-mar":111,"6-mar":360.5,"10-mar":375.2,"12-mar":361,"13-mar":382,"19-mar":255.8,"20-mar":320.6,"24-mar":384.6,"26-mar":246,"27-mar":373.5,"31-mar":327}},
+        {"producto":"Tripa","kgMes":32056.9,"fechas":{"3-mar":2211.6,"5-mar":2432,"6-mar":2545.5,"10-mar":2546.5,"12-mar":3256.7,"13-mar":2498,"19-mar":3081,"20-mar":2515.4,"24-mar":2516.1,"26-mar":2897,"27-mar":2913.5,"31-mar":2643.6}},
+        {"producto":"Cabeza","kgMes":38679.5,"fechas":{"3-mar":3094.8,"5-mar":2818.5,"6-mar":3054.5,"10-mar":3159,"12-mar":3192.5,"13-mar":3382,"19-mar":3581.8,"20-mar":3330.4,"24-mar":3417,"26-mar":3532,"27-mar":3106,"31-mar":3011}},
+        {"producto":"Cuajo","kgMes":2861.2,"fechas":{"3-mar":231,"5-mar":198,"6-mar":236,"10-mar":245.2,"12-mar":236.5,"13-mar":244,"19-mar":253,"20-mar":253.5,"24-mar":251,"26-mar":233,"27-mar":251,"31-mar":229}},
+        {"producto":"Libro","kgMes":3770,"fechas":{"3-mar":302,"5-mar":301,"6-mar":304,"10-mar":363,"12-mar":293,"13-mar":338,"19-mar":304,"20-mar":334,"24-mar":327,"26-mar":270,"27-mar":312,"31-mar":322}},
+        {"producto":"Menudo","kgMes":23960.2,"fechas":{"3-mar":1969.5,"5-mar":846.6,"6-mar":2105,"10-mar":2270,"12-mar":2786,"13-mar":2008,"19-mar":1985,"20-mar":2078.5,"24-mar":2255,"26-mar":1750.1,"27-mar":1957.5,"31-mar":1949}},
+        {"producto":"Pata Sucia","kgMes":25297,"fechas":{"3-mar":1848,"5-mar":1848,"6-mar":2110,"10-mar":2052,"12-mar":2287,"13-mar":2331,"19-mar":2116,"20-mar":2187,"24-mar":2286,"26-mar":2173,"27-mar":2127,"31-mar":1932}},
+        {"producto":"Teleco","kgMes":4021.5,"fechas":{"3-mar":426.6,"5-mar":239,"6-mar":233.7,"10-mar":384,"12-mar":391.8,"13-mar":380.4,"19-mar":273,"20-mar":383.6,"24-mar":395.9,"26-mar":276,"27-mar":260.3,"31-mar":377.2}},
+        {"producto":"Higado","kgMes":13962.4,"fechas":{"3-mar":1088,"5-mar":1111.5,"6-mar":1087.5,"10-mar":1178,"12-mar":1149,"13-mar":1199,"19-mar":1272.4,"20-mar":1152,"24-mar":1188,"26-mar":1241,"27-mar":1196,"31-mar":1100}},
+        {"producto":"Sebo","kgMes":0,"fechas":{}}
       ],
 
       activos: [
@@ -621,13 +688,17 @@
     }
 
     function formatMoney(n){
-      return new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2}).format(Number(n||0));
+      return new Intl.NumberFormat('es-MX',{
+        style:'currency',
+        currency:'MXN',
+        maximumFractionDigits:2
+      }).format(Number(n||0));
     }
-    function formatNum(n, dec=2){
-      return new Intl.NumberFormat('es-MX',{minimumFractionDigits:dec,maximumFractionDigits:dec}).format(Number(n||0));
-    }
+
     function formatPlain(n){
-      return new Intl.NumberFormat('es-MX',{maximumFractionDigits:2}).format(Number(n||0));
+      return new Intl.NumberFormat('es-MX',{
+        maximumFractionDigits:2
+      }).format(Number(n||0));
     }
 
     function renderTabs(){
@@ -635,6 +706,7 @@
       box.innerHTML = tabs.map((t,i)=>`
         <button class="tabBtn ${i===0?'active':''}" data-tab-open="${t.id}">${t.label}</button>
       `).join('');
+
       box.querySelectorAll('.tabBtn').forEach(btn=>{
         btn.addEventListener('click', ()=>{
           document.querySelectorAll('.tabBtn').forEach(x=>x.classList.remove('active'));
@@ -713,6 +785,16 @@
       document.getElementById('kpiAvg').textContent = formatMoney(avg);
     }
 
+    function renderNewCostChecks(){
+      const box = document.getElementById('newCostChecks');
+      box.innerHTML = productKeys.map(p=>`
+        <label class="checkItem">
+          <input type="checkbox" data-new-product="${p}" checked />
+          <span>${p}</span>
+        </label>
+      `).join('');
+    }
+
     function renderMatriz(){
       const q = (document.getElementById('searchMatriz')?.value || '').trim().toLowerCase();
       const data = state.matriz.filter(r => !q || r.concepto.toLowerCase().includes(q));
@@ -725,11 +807,12 @@
             <th>Costo</th>
             ${productKeys.map(p=>`<th>${p}</th>`).join('')}
             <th># Activos</th>
-            <th>Reparto por marca</th>
+            <th>Reparto</th>
+            <th>Acción</th>
           </tr>
         </thead>
         <tbody>
-          ${data.map((row, visibleIndex)=>{
+          ${data.map((row)=>{
             const realIndex = state.matriz.indexOf(row);
             const activeCount = productKeys.filter(p => row.marks[p]).length;
             const share = activeCount > 0 ? Number(row.costo||0) / activeCount : 0;
@@ -747,6 +830,9 @@
                 `).join('')}
                 <td class="center"><b>${activeCount}</b></td>
                 <td class="num">${activeCount ? formatMoney(share) : '<span class="muted">Sin reparto</span>'}</td>
+                <td class="center">
+                  <button class="btn danger" style="padding:8px 10px;" onclick="deleteCosto(${realIndex})">Eliminar</button>
+                </td>
               </tr>
             `;
           }).join('')}
@@ -758,7 +844,10 @@
       const tbl = document.getElementById('tblKg');
       const allDates = Array.from(new Set(
         state.kgProduccion.flatMap(r => Object.keys(r.fechas || {}))
-      )).sort();
+      )).sort((a,b)=>{
+        const order = ["3-mar","5-mar","6-mar","10-mar","12-mar","13-mar","19-mar","20-mar","24-mar","26-mar","27-mar","31-mar"];
+        return order.indexOf(a)-order.indexOf(b);
+      });
 
       tbl.innerHTML = `
         <thead>
@@ -792,16 +881,6 @@
 
     function renderActivos(){
       const tbl = document.getElementById('tblActivos');
-      const rows = state.activos.map(([nombre, valor, anos])=>{
-        const anual = valor / anos;
-        const mensual = anual / 12;
-        const diario = mensual / 26;
-        const hora = diario / 24;
-        const minuto = hora / 60;
-        const segundo = minuto / 60;
-        return {nombre, valor, anos, anual, mensual, diario, hora, minuto, segundo};
-      });
-
       tbl.innerHTML = `
         <thead>
           <tr>
@@ -817,19 +896,27 @@
           </tr>
         </thead>
         <tbody>
-          ${rows.map(r=>`
-            <tr>
-              <td class="stickyCol"><b>${r.nombre}</b></td>
-              <td class="num">${formatMoney(r.valor)}</td>
-              <td class="num">${formatPlain(r.anos)}</td>
-              <td class="num">${formatMoney(r.anual)}</td>
-              <td class="num">${formatMoney(r.mensual)}</td>
-              <td class="num">${formatMoney(r.diario)}</td>
-              <td class="num">${formatMoney(r.hora)}</td>
-              <td class="num">${formatMoney(r.minuto)}</td>
-              <td class="num">${formatMoney(r.segundo)}</td>
-            </tr>
-          `).join('')}
+          ${state.activos.map(([nombre, valor, anos])=>{
+            const anual = valor / anos;
+            const mensual = anual / 12;
+            const diario = mensual / 26;
+            const hora = diario / 24;
+            const minuto = hora / 60;
+            const segundo = minuto / 60;
+            return `
+              <tr>
+                <td class="stickyCol"><b>${nombre}</b></td>
+                <td class="num">${formatMoney(valor)}</td>
+                <td class="num">${formatPlain(anos)}</td>
+                <td class="num">${formatMoney(anual)}</td>
+                <td class="num">${formatMoney(mensual)}</td>
+                <td class="num">${formatMoney(diario)}</td>
+                <td class="num">${formatMoney(hora)}</td>
+                <td class="num">${formatMoney(minuto)}</td>
+                <td class="num">${formatMoney(segundo)}</td>
+              </tr>
+            `;
+          }).join('')}
         </tbody>
       `;
     }
@@ -925,6 +1012,60 @@
       rerenderAll();
     }
 
+    window.deleteCosto = function(index){
+      const item = state.matriz[index];
+      if(!item) return;
+      const ok = confirm(`¿Eliminar el costo "${item.concepto}"?`);
+      if(!ok) return;
+      state.matriz.splice(index,1);
+      rerenderAll();
+    }
+
+    function addNewCosto(){
+      const concepto = document.getElementById('newConcepto').value.trim();
+      const costo = Number(document.getElementById('newCosto').value || 0);
+
+      if(!concepto){
+        alert('Escribe el nombre del concepto.');
+        return;
+      }
+
+      const marks = {};
+      let activos = 0;
+      document.querySelectorAll('[data-new-product]').forEach(ch=>{
+        const checked = ch.checked ? 1 : 0;
+        marks[ch.dataset.newProduct] = checked;
+        activos += checked;
+      });
+
+      if(activos === 0){
+        alert('Marca al menos un producto al que le aplique este costo.');
+        return;
+      }
+
+      state.matriz.push({
+        concepto,
+        costo,
+        marks
+      });
+
+      document.getElementById('newConcepto').value = '';
+      document.getElementById('newCosto').value = '';
+      document.querySelectorAll('[data-new-product]').forEach(ch=>ch.checked = true);
+
+      rerenderAll();
+    }
+
+    document.getElementById('btnAgregarCosto').addEventListener('click', addNewCosto);
+
+    document.getElementById('btnMarcarTodos').addEventListener('click', ()=>{
+      document.querySelectorAll('[data-new-product]').forEach(ch=>ch.checked = true);
+    });
+
+    document.getElementById('btnLimpiarTodos').addEventListener('click', ()=>{
+      document.querySelectorAll('[data-new-product]').forEach(ch=>ch.checked = false);
+    });
+
     document.getElementById('btnGuardar').addEventListener('click', ()=>{
       saveState();
       alert('Datos guardados en este navegador.');
@@ -940,7 +1081,7 @@
     });
 
     document.getElementById('btnReset').addEventListener('click', ()=>{
-      if(!confirm('¿Seguro que quieres restablecer los datos a la versión original cargada del archivo?')) return;
+      if(!confirm('¿Seguro que quieres restablecer los datos originales del archivo nuevo?')) return;
       state = structuredClone(stateDefault);
       localStorage.removeItem(STORAGE_KEY);
       rerenderAll();
@@ -949,6 +1090,7 @@
     document.getElementById('searchMatriz').addEventListener('input', renderMatriz);
 
     renderTabs();
+    renderNewCostChecks();
     rerenderAll();
   </script>
 </body>
