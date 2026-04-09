@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Costos VDC 360°</title>
+  <style>
+    :root{
+      --brand:#0a7a3b;
+      --brand2:#0f9a52;
+      --bg:#f6f7f8;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --shadow:0 18px 50px rgba(2,6,23,.10);
+      --shadow2:0 10px 24px rgba(2,6,23,.08);
+      --danger:#b91c1c;
+      --ok:#0a7a3b;
+      --warn:#b45309;
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--ink);
+      background:
+        radial-gradient(1000px 420px at 15% -10%, rgba(15,154,82,.16), transparent 60%),
+        radial-gradient(900px 420px at 100% 0%, rgba(10,122,59,.12), transparent 55%),
+        var(--bg);
+    }
+
+    .wrap{max-width:1500px;margin:0 auto;padding:18px}
+    .top{
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      border-radius:24px;
+      padding:22px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .top:before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(500px 180px at 10% 10%, rgba(255,255,255,.18), transparent 60%),
+        radial-gradient(550px 220px at 100% 0%, rgba(255,255,255,.12), transparent 60%);
+      pointer-events:none;
+    }
+    .top h1{
+      margin:0;
+      font-size:30px;
+      font-weight:1000;
+      position:relative;
+    }
+    .top p{
+      margin:10px 0 0;
+      max-width:1000px;
+      line-height:1.5;
+      font-weight:700;
+      opacity:.95;
+      position:relative;
+    }
+
+    .toolbar{
+      margin-top:16px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.20);
+      color:#fff;
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      position:relative;
+    }
+
+    .nav{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:18px 0;
+    }
+    .tabBtn{
+      border:none;
+      cursor:pointer;
+      padding:12px 16px;
+      border-radius:14px;
+      background:#fff;
+      color:var(--ink);
+      font-weight:1000;
+      box-shadow:var(--shadow2);
+      border:1px solid rgba(15,23,42,.06);
+      transition:.16s ease;
+    }
+    .tabBtn.active{
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      transform:translateY(-1px);
+    }
+
+    .gridTop{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:16px;
+      margin-bottom:18px;
+    }
+    @media (max-width:1100px){
+      .gridTop{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media (max-width:700px){
+      .gridTop{grid-template-columns:1fr}
+    }
+
+    .kpi{
+      background:var(--card);
+      border-radius:22px;
+      padding:18px;
+      box-shadow:var(--shadow2);
+      border:1px solid rgba(15,23,42,.06);
+    }
+    .kpi .t{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:1000;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+    .kpi .v{
+      margin-top:8px;
+      font-size:28px;
+      font-weight:1000;
+      line-height:1;
+    }
+    .kpi .s{
+      margin-top:8px;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .panel{
+      display:none;
+      background:var(--card);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      border:1px solid rgba(15,23,42,.06);
+      overflow:hidden;
+    }
+    .panel.active{display:block}
+
+    .panelHead{
+      padding:18px 18px 8px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+    .panelHead h2{
+      margin:0;
+      font-size:22px;
+      font-weight:1000;
+    }
+    .panelHead p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .panelTools{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding:11px 14px;
+      border-radius:14px;
+      font-weight:1000;
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      box-shadow:0 10px 20px rgba(10,122,59,.20);
+    }
+    .btn.secondary{
+      background:#111827;
+      box-shadow:0 10px 20px rgba(17,24,39,.18);
+    }
+    .btn.ghost{
+      background:#fff;
+      color:var(--ink);
+      border:1px solid var(--line);
+      box-shadow:none;
+    }
+
+    .searchRow{
+      padding:0 18px 16px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .searchRow input{
+      flex:1;
+      min-width:240px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:14px;
+      font-weight:800;
+      outline:none;
+      background:#fff;
+    }
+
+    .tableWrap{
+      width:100%;
+      overflow:auto;
+      padding:0 18px 18px;
+    }
+
+    table{
+      width:max-content;
+      min-width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:13px;
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      z-index:2;
+      background:#f8fafc;
+      color:#0f172a;
+      border-bottom:1px solid var(--line);
+      border-top:1px solid var(--line);
+      padding:12px 10px;
+      text-align:center;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+    thead th:first-child{
+      border-left:1px solid var(--line);
+      border-top-left-radius:14px;
+    }
+    thead th:last-child{
+      border-right:1px solid var(--line);
+      border-top-right-radius:14px;
+    }
+
+    tbody td{
+      padding:9px 10px;
+      border-bottom:1px solid var(--line);
+      border-left:1px solid var(--line);
+      background:#fff;
+      white-space:nowrap;
+      vertical-align:middle;
+    }
+    tbody tr td:last-child{
+      border-right:1px solid var(--line);
+    }
+    tbody tr:hover td{
+      background:#fbfdfb;
+    }
+
+    .num{
+      text-align:right;
+      font-variant-numeric:tabular-nums;
+    }
+    .center{text-align:center}
+    .stickyCol{
+      position:sticky;
+      left:0;
+      z-index:1;
+      background:#fff;
+    }
+    tbody tr:hover .stickyCol{
+      background:#fbfdfb;
+    }
+
+    .inputNum{
+      width:120px;
+      border:1px solid #dbe2ea;
+      border-radius:10px;
+      padding:8px 9px;
+      font-size:13px;
+      font-weight:800;
+      text-align:right;
+      background:#fff;
+    }
+    .inputSmall{
+      width:74px;
+      border:1px solid #dbe2ea;
+      border-radius:10px;
+      padding:8px 9px;
+      font-size:13px;
+      font-weight:800;
+      text-align:right;
+      background:#fff;
+    }
+
+    .checkCell{
+      text-align:center;
+    }
+    .checkCell input{
+      width:18px;
+      height:18px;
+      accent-color:var(--brand);
+      cursor:pointer;
+    }
+
+    .resultGood{
+      color:var(--ok);
+      font-weight:1000;
+    }
+    .muted{
+      color:var(--muted);
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:1000;
+      background:rgba(10,122,59,.10);
+      color:var(--brand);
+    }
+
+    .footerNote{
+      padding:0 18px 18px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      line-height:1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="top">
+      <h1>Costos VDC 360°</h1>
+      <p>
+        Vista HTML para trabajar la matriz de costos, costos mensuales, activos, kilos de producción y resultados.
+        Puedes editar valores directamente aquí y los resultados se recalculan al momento.
+      </p>
+      <div class="toolbar">
+        <span class="chip">Matriz editable</span>
+        <span class="chip">Resultados automáticos</span>
+        <span class="chip">Sin depender del Excel</span>
+      </div>
+    </section>
+
+    <section class="gridTop">
+      <article class="kpi">
+        <div class="t">Costo mensual total cargado</div>
+        <div class="v" id="kpiTotalCost">$0</div>
+        <div class="s">Suma de conceptos en la matriz</div>
+      </article>
+      <article class="kpi">
+        <div class="t">Kg mensuales totales</div>
+        <div class="v" id="kpiKg">$0</div>
+        <div class="s">Suma de producción mensual</div>
+      </article>
+      <article class="kpi">
+        <div class="t">Productos activos</div>
+        <div class="v" id="kpiProducts">0</div>
+        <div class="s">Productos con kg mayores a 0</div>
+      </article>
+      <article class="kpi">
+        <div class="t">Costo promedio por kg</div>
+        <div class="v" id="kpiAvg">$0</div>
+        <div class="s">Costo total / kg total</div>
+      </article>
+    </section>
+
+    <nav class="nav" id="tabs"></nav>
+
+    <section class="panel active" data-tab="resultados">
+      <div class="panelHead">
+        <div>
+          <h2>Resultados</h2>
+          <p>Costo total por producto, kg mensuales y costo por kg.</p>
+        </div>
+        <div class="panelTools">
+          <span class="badge">Recalcula en vivo</span>
+          <button class="btn secondary" id="btnReset">Restablecer datos</button>
+        </div>
+      </div>
+      <div class="tableWrap">
+        <table id="tblResultados"></table>
+      </div>
+      <div class="footerNote">
+        La lógica aplicada aquí para el costo total es la que aparece visible en la fórmula del archivo: cada costo se divide entre los productos marcados con “X” en esa fila.
+      </div>
+    </section>
+
+    <section class="panel" data-tab="matriz">
+      <div class="panelHead">
+        <div>
+          <h2>Matriz</h2>
+          <p>Edita costos y activa o desactiva productos por concepto.</p>
+        </div>
+        <div class="panelTools">
+          <button class="btn" id="btnGuardar">Guardar en navegador</button>
+          <button class="btn ghost" id="btnExportJson">Exportar JSON</button>
+        </div>
+      </div>
+      <div class="searchRow">
+        <input type="text" id="searchMatriz" placeholder="Buscar concepto dentro de la matriz..." />
+      </div>
+      <div class="tableWrap">
+        <table id="tblMatriz"></table>
+      </div>
+    </section>
+
+    <section class="panel" data-tab="kg">
+      <div class="panelHead">
+        <div>
+          <h2>Kg Producción</h2>
+          <p>Producción mensual y desglose por fechas.</p>
+        </div>
+      </div>
+      <div class="tableWrap">
+        <table id="tblKg"></table>
+      </div>
+    </section>
+
+    <section class="panel" data-tab="activos">
+      <div class="panelHead">
+        <div>
+          <h2>Activos</h2>
+          <p>Depreciación por años, meses, días, horas, minutos y segundos.</p>
+        </div>
+      </div>
+      <div class="tableWrap">
+        <table id="tblActivos"></table>
+      </div>
+    </section>
+
+    <section class="panel" data-tab="costosMens">
+      <div class="panelHead">
+        <div>
+          <h2>Costos Mensuales</h2>
+          <p>Conversión de costo mensual a día, hora, minuto y segundo.</p>
+        </div>
+      </div>
+      <div class="tableWrap">
+        <table id="tblCostosMens"></table>
+      </div>
+    </section>
+
+    <section class="panel" data-tab="costosBase">
+      <div class="panelHead">
+        <div>
+          <h2>Costos Base</h2>
+          <p>Listado base de conceptos y costo mensual.</p>
+        </div>
+      </div>
+      <div class="tableWrap">
+        <table id="tblCostosBase"></table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "vdc_costos_html_v1";
+
+    const productKeys = [
+      "Bofe","Corazon","Tripa","Cabeza","Cuajo","Libro","Menudo","Pata Sucia","Teleco","Higado","Sebo"
+    ];
+
+    const stateDefault = {
+      matriz: [
+        { concepto:"Flete", costo:294000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Mano de obra", costo:414000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Luz Granja", costo:4712, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
+        { concepto:"Luz bodega", costo:52949, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Agua", costo:21157, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Gas", costo:26000, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
+        { concepto:"Mantenimiento", costo:10000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Telcel", costo:15085, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Combustible", costo:44000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Almuerzos", costo:20400, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Hielo", costo:30000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Marketing", costo:7500, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Materiales", costo:0, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:0,Menudo:0,"Pata Sucia":0,Teleco:0,Higado:0,Sebo:0} },
+        { concepto:"Escobas", costo:500, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Cuchillos", costo:235, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Botas", costo:550, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Mandiles", costo:180, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Cubetas", costo:50, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Faja", costo:400, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Guantes", costo:1250, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Mantenimiento Refacciones Camioneta", costo:4900, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Servicio", costo:6000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Articulos Limpieza", costo:40595, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Quimica", costo:3125.86, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
+        { concepto:"Carretillas", costo:6500, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Refacciones maquina de menudo y mante", costo:2000, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
+        { concepto:"Renta inmueble", costo:75000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"IMSS INFONAVIT", costo:80000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Impuestos", costo:60000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Contrato basura", costo:5000, marks:{Bofe:0,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Paneles solares", costo:25000, marks:{Bofe:0,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Refrigeradores", costo:10000, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Sierras de carne", costo:10416.67, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:1,Cuajo:0,Libro:0,Menudo:0,"Pata Sucia":0,Teleco:0,Higado:0,Sebo:0} },
+        { concepto:"Chevrolet nueva", costo:6250, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Camionta nissan seminueva", costo:4687.5, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Camioneta nissan blanca 2", costo:4687.5, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Camioneta nissan blanca", costo:4687.5, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Camioneta nissan gris", costo:4687.5, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Camioneta ulises", costo:3125, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Monta cargas", costo:4750, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:1,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
+        { concepto:"Maquina Menudo", costo:2083.33, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
+        { concepto:"Chevrolet vieja", costo:1562.5, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Macrobins", costo:1258.33, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Equipo computo", costo:833.33, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Mesas", costo:500, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Patines", costo:291.67, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Basculas", costo:104.17, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Tambos basura", costo:41.67, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:1,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":1,Teleco:1,Higado:1,Sebo:0} },
+        { concepto:"Despezuñadora", costo:31.25, marks:{Bofe:0,Corazon:0,Tripa:0,Cabeza:0,Cuajo:0,Libro:0,Menudo:0,"Pata Sucia":1,Teleco:0,Higado:0,Sebo:0} },
+        { concepto:"Cajas fruteras", costo:31.25, marks:{Bofe:1,Corazon:1,Tripa:1,Cabeza:0,Cuajo:1,Libro:1,Menudo:1,"Pata Sucia":0,Teleco:0,Higado:1,Sebo:0} }
+      ],
+
+      kgProduccion: [
+        { producto:"Bofe", kgMes:4809, fechas:{"2026-03-03":276,"2026-03-05":550,"2026-03-06":391,"2026-03-10":276,"2026-03-12":558.8,"2026-03-13":391,"2026-03-19":481.6,"2026-03-20":368.6,"2026-03-24":409.8,"2026-03-26":405,"2026-03-27":329.2,"2026-03-31":372} },
+        { producto:"Corazon", kgMes:3860.6, fechas:{"2026-03-03":363.4,"2026-03-05":111,"2026-03-06":360.5,"2026-03-10":375.2,"2026-03-12":361,"2026-03-13":382,"2026-03-19":255.8,"2026-03-20":320.6,"2026-03-24":384.6,"2026-03-26":246,"2026-03-27":373.5,"2026-03-31":327} },
+        { producto:"Tripa", kgMes:32056.9, fechas:{"2026-03-03":2211.6,"2026-03-05":2432,"2026-03-06":2545.5,"2026-03-10":2546.5,"2026-03-12":3256.7,"2026-03-13":2498,"2026-03-19":3081,"2026-03-20":2515.4,"2026-03-24":2516.1,"2026-03-26":2897,"2026-03-27":2913.5,"2026-03-31":2643.6} },
+        { producto:"Cabeza", kgMes:38679.5, fechas:{"2026-03-03":3094.8,"2026-03-05":2818.5,"2026-03-06":3054.5,"2026-03-10":3159,"2026-03-12":3192.5,"2026-03-13":3382,"2026-03-19":3581.8,"2026-03-20":3330.4,"2026-03-24":3417,"2026-03-26":3532,"2026-03-27":3106,"2026-03-31":3011} },
+        { producto:"Cuajo", kgMes:2861.2, fechas:{"2026-03-03":231,"2026-03-05":198,"2026-03-06":236,"2026-03-10":245.2,"2026-03-12":236.5,"2026-03-13":244,"2026-03-19":253,"2026-03-20":253.5,"2026-03-24":251,"2026-03-26":233,"2026-03-27":251,"2026-03-31":229} },
+        { producto:"Libro", kgMes:3770, fechas:{"2026-03-03":302,"2026-03-05":301,"2026-03-06":304,"2026-03-10":363,"2026-03-12":293,"2026-03-13":338,"2026-03-19":304,"2026-03-20":334,"2026-03-24":327,"2026-03-26":270,"2026-03-27":312,"2026-03-31":322} },
+        { producto:"Menudo", kgMes:23960.2, fechas:{"2026-03-03":1969.5,"2026-03-05":846.6,"2026-03-06":2105,"2026-03-10":2270,"2026-03-12":2786,"2026-03-13":2008,"2026-03-19":1985,"2026-03-20":2078.5,"2026-03-24":2255,"2026-03-26":1750.1,"2026-03-27":1957.5,"2026-03-31":1949} },
+        { producto:"Pata Sucia", kgMes:25297, fechas:{"2026-03-03":1848,"2026-03-05":1848,"2026-03-06":2110,"2026-03-10":2052,"2026-03-12":2287,"2026-03-13":2331,"2026-03-19":2116,"2026-03-20":2187,"2026-03-24":2286,"2026-03-26":2173,"2026-03-27":2127,"2026-03-31":1932} },
+        { producto:"Teleco", kgMes:4021.5, fechas:{"2026-03-03":426.6,"2026-03-05":239,"2026-03-06":233.7,"2026-03-10":384,"2026-03-12":391.8,"2026-03-13":380.4,"2026-03-19":273,"2026-03-20":383.6,"2026-03-24":395.9,"2026-03-26":276,"2026-03-27":260.3,"2026-03-31":377.2} },
+        { producto:"Higado", kgMes:13962.4, fechas:{"2026-03-03":1088,"2026-03-05":1111.5,"2026-03-06":1087.5,"2026-03-10":1178,"2026-03-12":1149,"2026-03-13":1199,"2026-03-19":1272.4,"2026-03-20":1152,"2026-03-24":1188,"2026-03-26":1241,"2026-03-27":1196,"2026-03-31":1100} },
+        { producto:"Sebo", kgMes:0, fechas:{} }
+      ],
+
+      activos: [
+        ["Paneles solares",2400000,8],
+        ["Refrigeradores",1200000,10],
+        ["Sierras de carne",1000000,8],
+        ["Chevrolet nueva",600000,8],
+        ["Camionta nissan seminueva",450000,8],
+        ["Camioneta nissan blanca 2",450000,8],
+        ["Camioneta nissan blanca",450000,8],
+        ["Camioneta nissan gris",450000,8],
+        ["Camioneta ulises",300000,8],
+        ["Monta cargas",285000,5],
+        ["Maquina Menudo",200000,8],
+        ["Chevrolet vieja",150000,8],
+        ["Macrobins",120800,8],
+        ["Equipo computo",40000,4],
+        ["Mesas",24000,4],
+        ["Patines",7000,2],
+        ["Basculas",5000,4],
+        ["Tambos basura",4000,8],
+        ["Despezuñadora",3000,8],
+        ["Cajas fruteras",3000,8]
+      ],
+
+      costosMens: [
+        ["Flete",294000],["Mano de obra",414000],["Luz Granja",4712],["Luz bodega",52949],["Agua",21157],
+        ["Gas",26000],["Mantenimiento",10000],["Telcel",15085],["Combustible",44000],["Almuerzos",20400],
+        ["Hielo",30000],["Marketing",7500],["Materiales",0],["Escobas",500],["Cuchillos",235],["Botas",550],
+        ["Mandiles",180],["Cubetas",50],["Faja",400],["Guantes",1250],["Mantenimiento Refacciones Camioneta",4900],
+        ["Servicio",6000],["Articulos Limpieza",40595],["Quimica",3125.86],["Carretillas",6500],
+        ["Refacciones maquina de menudo y mante",2000],["Renta inmueble",75000],["IMSS INFONAVIT",80000],
+        ["Impuestos",60000],["Contrato basura",5000]
+      ],
+
+      costosBase: [
+        ["Flete",294000],["Mano de obra",414000],["Luz Granja",4712],["Luz",52949],["Agua",21157],["Gas",26000],
+        ["Mantenimiento",10000],["Telcel",15085],["Combustible",44000],["Almuerzos",20400],["Hielo",16400],
+        ["Escobas",500],["Cuchillos",235],["Botas",550],["Mandiles",170],["Cubetas",50],["Faja",300],
+        ["Guantes",180],["Camioneta Nissan (depreciación)",180.29],["Mantenimiento camioneta",1250],["Servicio",700],
+        ["Articulos limpieza",6000],["Maquina de menudo (depreciación)",80.13],["Quimica",40595],["Mesas (depreciación)",400],
+        ["Carretillas",3125],["Macro bins",155],["Patines",200],["Basculas",200],["Equipo computo (depreciación)",500],
+        ["Montacargas (depreciación)",4750],["Refacciones maquina",5800],["Refrigeradores (depreciación)",20000]
+      ]
+    };
+
+    let state = loadState();
+
+    const tabs = [
+      {id:"resultados", label:"Resultados"},
+      {id:"matriz", label:"Matriz"},
+      {id:"kg", label:"Kg Producción"},
+      {id:"activos", label:"Activos"},
+      {id:"costosMens", label:"Costos Mensuales"},
+      {id:"costosBase", label:"Costos Base"}
+    ];
+
+    function loadState(){
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if(saved){
+        try{return JSON.parse(saved);}catch(e){}
+      }
+      return structuredClone(stateDefault);
+    }
+
+    function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function formatMoney(n){
+      return new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2}).format(Number(n||0));
+    }
+    function formatNum(n, dec=2){
+      return new Intl.NumberFormat('es-MX',{minimumFractionDigits:dec,maximumFractionDigits:dec}).format(Number(n||0));
+    }
+    function formatPlain(n){
+      return new Intl.NumberFormat('es-MX',{maximumFractionDigits:2}).format(Number(n||0));
+    }
+
+    function renderTabs(){
+      const box = document.getElementById('tabs');
+      box.innerHTML = tabs.map((t,i)=>`
+        <button class="tabBtn ${i===0?'active':''}" data-tab-open="${t.id}">${t.label}</button>
+      `).join('');
+      box.querySelectorAll('.tabBtn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          document.querySelectorAll('.tabBtn').forEach(x=>x.classList.remove('active'));
+          document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+          btn.classList.add('active');
+          document.querySelector(`.panel[data-tab="${btn.dataset.tabOpen}"]`).classList.add('active');
+        });
+      });
+    }
+
+    function calculateResultados(){
+      const kgMap = {};
+      state.kgProduccion.forEach(r=>kgMap[r.producto] = Number(r.kgMes||0));
+
+      const out = productKeys.map(p => ({
+        producto:p,
+        costoTotal:0,
+        kg:Number(kgMap[p] || 0),
+        costoKg:0
+      }));
+
+      const idx = Object.fromEntries(out.map((r,i)=>[r.producto,i]));
+
+      state.matriz.forEach(row=>{
+        const cost = Number(row.costo || 0);
+        const activeProducts = productKeys.filter(p => row.marks && row.marks[p]);
+        const divisor = activeProducts.length;
+        if(cost > 0 && divisor > 0){
+          const share = cost / divisor;
+          activeProducts.forEach(p=>{
+            out[idx[p]].costoTotal += share;
+          });
+        }
+      });
+
+      out.forEach(r=>{
+        r.costoKg = r.kg > 0 ? r.costoTotal / r.kg : 0;
+      });
+
+      return out;
+    }
+
+    function renderResultados(){
+      const resultados = calculateResultados();
+      const tbl = document.getElementById('tblResultados');
+
+      tbl.innerHTML = `
+        <thead>
+          <tr>
+            <th class="stickyCol">Producto</th>
+            <th>Costo total</th>
+            <th>Kg</th>
+            <th>Costo/kg</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${resultados.map(r=>`
+            <tr>
+              <td class="stickyCol"><b>${r.producto}</b></td>
+              <td class="num">${formatMoney(r.costoTotal)}</td>
+              <td class="num">${formatPlain(r.kg)}</td>
+              <td class="num resultGood">${formatMoney(r.costoKg)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+
+      const totalCost = state.matriz.reduce((a,b)=>a + Number(b.costo||0),0);
+      const totalKg = resultados.reduce((a,b)=>a + Number(b.kg||0),0);
+      const activeProducts = resultados.filter(x=>x.kg>0).length;
+      const avg = totalKg>0 ? totalCost/totalKg : 0;
+
+      document.getElementById('kpiTotalCost').textContent = formatMoney(totalCost);
+      document.getElementById('kpiKg').textContent = formatPlain(totalKg);
+      document.getElementById('kpiProducts').textContent = activeProducts;
+      document.getElementById('kpiAvg').textContent = formatMoney(avg);
+    }
+
+    function renderMatriz(){
+      const q = (document.getElementById('searchMatriz')?.value || '').trim().toLowerCase();
+      const data = state.matriz.filter(r => !q || r.concepto.toLowerCase().includes(q));
+      const tbl = document.getElementById('tblMatriz');
+
+      tbl.innerHTML = `
+        <thead>
+          <tr>
+            <th class="stickyCol">Concepto</th>
+            <th>Costo</th>
+            ${productKeys.map(p=>`<th>${p}</th>`).join('')}
+            <th># Activos</th>
+            <th>Reparto por marca</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map((row, visibleIndex)=>{
+            const realIndex = state.matriz.indexOf(row);
+            const activeCount = productKeys.filter(p => row.marks[p]).length;
+            const share = activeCount > 0 ? Number(row.costo||0) / activeCount : 0;
+            return `
+              <tr>
+                <td class="stickyCol"><b>${row.concepto}</b></td>
+                <td class="num">
+                  <input class="inputNum" type="number" step="0.01" value="${Number(row.costo||0)}"
+                    onchange="updateCosto(${realIndex}, this.value)" />
+                </td>
+                ${productKeys.map(p=>`
+                  <td class="checkCell">
+                    <input type="checkbox" ${row.marks[p] ? 'checked' : ''} onchange="toggleMark(${realIndex}, '${p}', this.checked)" />
+                  </td>
+                `).join('')}
+                <td class="center"><b>${activeCount}</b></td>
+                <td class="num">${activeCount ? formatMoney(share) : '<span class="muted">Sin reparto</span>'}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      `;
+    }
+
+    function renderKg(){
+      const tbl = document.getElementById('tblKg');
+      const allDates = Array.from(new Set(
+        state.kgProduccion.flatMap(r => Object.keys(r.fechas || {}))
+      )).sort();
+
+      tbl.innerHTML = `
+        <thead>
+          <tr>
+            <th class="stickyCol">Producto</th>
+            <th>Kg/mes</th>
+            ${allDates.map(d=>`<th>${d}</th>`).join('')}
+            <th>Total visible</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${state.kgProduccion.map((row, index)=>{
+            const totalVisible = allDates.reduce((a,d)=>a + Number(row.fechas?.[d] || 0), 0);
+            return `
+              <tr>
+                <td class="stickyCol"><b>${row.producto}</b></td>
+                <td class="num">
+                  <input class="inputNum" type="number" step="0.01" value="${Number(row.kgMes||0)}"
+                    onchange="updateKgMes(${index}, this.value)" />
+                </td>
+                ${allDates.map(d=>`
+                  <td class="num">${formatPlain(row.fechas?.[d] || 0)}</td>
+                `).join('')}
+                <td class="num"><b>${formatPlain(totalVisible)}</b></td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      `;
+    }
+
+    function renderActivos(){
+      const tbl = document.getElementById('tblActivos');
+      const rows = state.activos.map(([nombre, valor, anos])=>{
+        const anual = valor / anos;
+        const mensual = anual / 12;
+        const diario = mensual / 26;
+        const hora = diario / 24;
+        const minuto = hora / 60;
+        const segundo = minuto / 60;
+        return {nombre, valor, anos, anual, mensual, diario, hora, minuto, segundo};
+      });
+
+      tbl.innerHTML = `
+        <thead>
+          <tr>
+            <th class="stickyCol">Activo</th>
+            <th>Valor</th>
+            <th>Años</th>
+            <th>Anual</th>
+            <th>Mensual</th>
+            <th>Diario</th>
+            <th>Hora</th>
+            <th>Minuto</th>
+            <th>Segundo</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r=>`
+            <tr>
+              <td class="stickyCol"><b>${r.nombre}</b></td>
+              <td class="num">${formatMoney(r.valor)}</td>
+              <td class="num">${formatPlain(r.anos)}</td>
+              <td class="num">${formatMoney(r.anual)}</td>
+              <td class="num">${formatMoney(r.mensual)}</td>
+              <td class="num">${formatMoney(r.diario)}</td>
+              <td class="num">${formatMoney(r.hora)}</td>
+              <td class="num">${formatMoney(r.minuto)}</td>
+              <td class="num">${formatMoney(r.segundo)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+    }
+
+    function renderCostosMens(){
+      const tbl = document.getElementById('tblCostosMens');
+      tbl.innerHTML = `
+        <thead>
+          <tr>
+            <th class="stickyCol">Concepto</th>
+            <th>Costo mensual</th>
+            <th>Días</th>
+            <th>Costo por día</th>
+            <th>Horas</th>
+            <th>Costo por hora</th>
+            <th>Min</th>
+            <th>Costo por min</th>
+            <th>Seg</th>
+            <th>Costo por seg</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${state.costosMens.map(([nombre, costo])=>{
+            const dias = 26;
+            const horas = 24;
+            const mins = 60;
+            const segs = 60;
+            const porDia = Number(costo||0)/dias;
+            const porHora = porDia/horas;
+            const porMin = porHora/mins;
+            const porSeg = porMin/segs;
+            return `
+              <tr>
+                <td class="stickyCol"><b>${nombre}</b></td>
+                <td class="num">${formatMoney(costo)}</td>
+                <td class="num">${dias}</td>
+                <td class="num">${formatMoney(porDia)}</td>
+                <td class="num">${horas}</td>
+                <td class="num">${formatMoney(porHora)}</td>
+                <td class="num">${mins}</td>
+                <td class="num">${formatMoney(porMin)}</td>
+                <td class="num">${segs}</td>
+                <td class="num">${formatMoney(porSeg)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      `;
+    }
+
+    function renderCostosBase(){
+      const tbl = document.getElementById('tblCostosBase');
+      tbl.innerHTML = `
+        <thead>
+          <tr>
+            <th class="stickyCol">Concepto</th>
+            <th>Costo mensual</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${state.costosBase.map(([nombre,costo])=>`
+            <tr>
+              <td class="stickyCol"><b>${nombre}</b></td>
+              <td class="num">${formatMoney(costo)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+    }
+
+    function rerenderAll(){
+      renderResultados();
+      renderMatriz();
+      renderKg();
+      renderActivos();
+      renderCostosMens();
+      renderCostosBase();
+      saveState();
+    }
+
+    window.updateCosto = function(index, value){
+      state.matriz[index].costo = Number(value || 0);
+      rerenderAll();
+    }
+
+    window.toggleMark = function(index, product, checked){
+      state.matriz[index].marks[product] = checked ? 1 : 0;
+      rerenderAll();
+    }
+
+    window.updateKgMes = function(index, value){
+      state.kgProduccion[index].kgMes = Number(value || 0);
+      rerenderAll();
+    }
+
+    document.getElementById('btnGuardar').addEventListener('click', ()=>{
+      saveState();
+      alert('Datos guardados en este navegador.');
+    });
+
+    document.getElementById('btnExportJson').addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'costos-vdc360-data.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('btnReset').addEventListener('click', ()=>{
+      if(!confirm('¿Seguro que quieres restablecer los datos a la versión original cargada del archivo?')) return;
+      state = structuredClone(stateDefault);
+      localStorage.removeItem(STORAGE_KEY);
+      rerenderAll();
+    });
+
+    document.getElementById('searchMatriz').addEventListener('input', renderMatriz);
+
+    renderTabs();
+    rerenderAll();
+  </script>
+</body>
+</html>
