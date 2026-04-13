@@ -395,7 +395,7 @@
       color:var(--brand);
     }
 
-    .monthInput{
+    .dateInput{
       border:1px solid var(--line);
       border-radius:12px;
       padding:10px 12px;
@@ -410,11 +410,11 @@
     <section class="top">
       <h1>Costos VDC 360°</h1>
       <p>
-        Matriz de costos, kilos de producción, activos y resultados. Los kilos se alimentan automáticamente desde
+        Matriz de costos, kilos de producción, activos y resultados. Los kilos del día se alimentan automáticamente desde
         Hoja de Viaje guardada y también desde Hoja de Viaje Live mientras van capturando.
       </p>
       <div class="toolbar">
-        <span class="chip">Datos actualizados</span>
+        <span class="chip">Vista diaria</span>
         <span class="chip">Matriz editable</span>
         <span class="chip">Agregar nuevos costos</span>
         <span class="chip">Hoja de Viaje Live conectada</span>
@@ -423,24 +423,24 @@
 
     <section class="gridTop">
       <article class="kpi">
-        <div class="t">Costo mensual total cargado</div>
+        <div class="t">Costo total cargado</div>
         <div class="v" id="kpiTotalCost">$0</div>
         <div class="s">Suma de conceptos de la matriz</div>
       </article>
       <article class="kpi">
-        <div class="t">Kg mensuales totales</div>
+        <div class="t">Kg totales del día</div>
         <div class="v" id="kpiKg">0</div>
-        <div class="s">Suma total de producción</div>
+        <div class="s">Suma total del viaje seleccionado</div>
       </article>
       <article class="kpi">
-        <div class="t">Productos activos</div>
+        <div class="t">Productos activos del día</div>
         <div class="v" id="kpiProducts">0</div>
         <div class="s">Productos con kg mayores a 0</div>
       </article>
       <article class="kpi">
         <div class="t">Costo promedio por kg</div>
         <div class="v" id="kpiAvg">$0</div>
-        <div class="s">Costo total / kg total</div>
+        <div class="s">Costo total / kg del día</div>
       </article>
     </section>
 
@@ -450,7 +450,7 @@
       <div class="panelHead">
         <div>
           <h2>Resultados</h2>
-          <p>Costo total por producto, kg mensuales y costo por kg.</p>
+          <p>Costo total por producto, kg del día y costo por kg.</p>
         </div>
         <div class="panelTools">
           <span class="badge">Recalcula en vivo</span>
@@ -512,12 +512,12 @@
       <div class="panelHead">
         <div>
           <h2>Kg Producción</h2>
-          <p>Kilos por producto y por fecha, tomados de Hoja de Viaje guardada y Hoja de Viaje Live.</p>
+          <p>Kilos por producto del día seleccionado, tomados de Hoja de Viaje y Hoja de Viaje Live.</p>
         </div>
         <div class="panelTools">
           <label style="display:flex;align-items:center;gap:8px;font-weight:1000;">
-            Mes:
-            <input type="month" id="kgMonth" class="monthInput">
+            Fecha:
+            <input type="date" id="kgDate" class="dateInput">
           </label>
           <button class="btn" id="btnSyncKg">Sincronizar ahora</button>
           <span class="badge" id="kgSyncStatus">Sin sincronizar</span>
@@ -566,7 +566,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "vdc_costos_html_v4_live";
+    const STORAGE_KEY = "vdc_costos_html_v5_dia";
 
     const supabase = window.supabase.createClient(
       'https://rcegikeiaxptolrduguc.supabase.co',
@@ -652,17 +652,17 @@
       ],
 
       kgProduccion: [
-        {"producto":"Bofe","kgMes":0,"fechas":{}},
-        {"producto":"Corazon","kgMes":0,"fechas":{}},
-        {"producto":"Tripa","kgMes":0,"fechas":{}},
-        {"producto":"Cabeza","kgMes":0,"fechas":{}},
-        {"producto":"Cuajo","kgMes":0,"fechas":{}},
-        {"producto":"Libro","kgMes":0,"fechas":{}},
-        {"producto":"Menudo","kgMes":0,"fechas":{}},
-        {"producto":"Pata Sucia","kgMes":0,"fechas":{}},
-        {"producto":"Teleco","kgMes":0,"fechas":{}},
-        {"producto":"Higado","kgMes":0,"fechas":{}},
-        {"producto":"Sebo","kgMes":0,"fechas":{}}
+        {"producto":"Bofe","kgDia":0,"fuente":"-"},
+        {"producto":"Corazon","kgDia":0,"fuente":"-"},
+        {"producto":"Tripa","kgDia":0,"fuente":"-"},
+        {"producto":"Cabeza","kgDia":0,"fuente":"-"},
+        {"producto":"Cuajo","kgDia":0,"fuente":"-"},
+        {"producto":"Libro","kgDia":0,"fuente":"-"},
+        {"producto":"Menudo","kgDia":0,"fuente":"-"},
+        {"producto":"Pata Sucia","kgDia":0,"fuente":"-"},
+        {"producto":"Teleco","kgDia":0,"fuente":"-"},
+        {"producto":"Higado","kgDia":0,"fuente":"-"},
+        {"producto":"Sebo","kgDia":0,"fuente":"-"}
       ],
 
       activos: [
@@ -727,7 +727,10 @@
     function loadState(){
       const saved = localStorage.getItem(STORAGE_KEY);
       if(saved){
-        try{return JSON.parse(saved);}catch(e){}
+        try{
+          const parsed = JSON.parse(saved);
+          return parsed;
+        }catch(e){}
       }
       return structuredClone(stateDefault);
     }
@@ -750,26 +753,10 @@
       }).format(Number(n||0));
     }
 
-    function getCurrentMonthValue(){
-      const now = new Date();
-      const m = String(now.getMonth()+1).padStart(2,'0');
-      return `${now.getFullYear()}-${m}`;
-    }
-
-    function getMonthRange(monthValue){
-      const [year, month] = monthValue.split('-').map(Number);
-      const start = new Date(year, month - 1, 1);
-      const end = new Date(year, month, 1);
-      return {
-        start: start.toISOString().slice(0,10),
-        end: end.toISOString().slice(0,10)
-      };
-    }
-
-    function formatDateLabel(isoDate){
-      const [y,m,d] = isoDate.split('-').map(Number);
-      const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-      return `${d}-${meses[m-1]}`;
+    function todayISO(){
+      const d = new Date();
+      const z = d.getTimezoneOffset() * 60000;
+      return new Date(d - z).toISOString().slice(0,10);
     }
 
     function setKgSyncStatus(text, ok = true){
@@ -784,12 +771,8 @@
       const current = new Map((state.kgProduccion || []).map(r => [r.producto, r]));
       state.kgProduccion = productKeys.map(p => {
         const existing = current.get(p);
-        return existing || { producto:p, kgMes:0, fechas:{} };
+        return existing || { producto:p, kgDia:0, fuente:'-' };
       });
-    }
-
-    function isDateInsideRange(fecha, start, end){
-      return fecha >= start && fecha < end;
     }
 
     function normalizeLineas(lineas){
@@ -797,59 +780,56 @@
       return lineas;
     }
 
-    function buildEmptyAccumulated(){
+    function buildEmptyDayRows(){
       const obj = {};
       productKeys.forEach(p => {
-        obj[p] = { kgMes:0, fechas:{} };
+        obj[p] = { kgDia:0, fuente:'-' };
       });
       return obj;
     }
 
-    function addKgToAccumulated(acumulado, productoDestino, fecha, kg){
-      if(!productoDestino) return;
-      if(!acumulado[productoDestino]){
-        acumulado[productoDestino] = { kgMes:0, fechas:{} };
-      }
-      acumulado[productoDestino].kgMes += kg;
-      acumulado[productoDestino].fechas[fecha] = (acumulado[productoDestino].fechas[fecha] || 0) + kg;
-    }
+    function extractKgFromResultados(resultados){
+      const acumulado = buildEmptyDayRows();
 
-    function extractKgFromResultados(resultados, fecha, acumulado){
       Object.entries(resultados || {}).forEach(([nombreHoja, lineas]) => {
         const destino = hojaViajeMap[nombreHoja];
         if(!destino) return;
 
-        const totalKgFecha = normalizeLineas(lineas).reduce((sum, item) => {
+        const totalKg = normalizeLineas(lineas).reduce((sum, item) => {
           return sum + Number(item?.kg || 0);
         }, 0);
 
-        addKgToAccumulated(acumulado, destino, fecha, totalKgFecha);
+        acumulado[destino].kgDia += totalKg;
       });
+
+      return acumulado;
     }
 
-    async function syncKgFromBothSources(showAlert = false){
-      const monthValue = document.getElementById('kgMonth')?.value || getCurrentMonthValue();
-      const { start, end } = getMonthRange(monthValue);
+    function rowsFromAccumulated(acumulado, fuente){
+      return productKeys.map(producto => ({
+        producto,
+        kgDia: Number(acumulado[producto]?.kgDia || 0),
+        fuente
+      }));
+    }
+
+    async function syncKgForSelectedDate(showAlert = false){
+      const selectedDate = document.getElementById('kgDate')?.value || todayISO();
 
       setKgSyncStatus('Sincronizando...', true);
 
-      const [
-        savedResp,
-        liveResp
-      ] = await Promise.all([
+      const [savedResp, liveResp] = await Promise.all([
         supabase
           .from(HOJA_VIAJE_TABLE)
           .select('fecha, resultados')
-          .gte('fecha', start)
-          .lt('fecha', end)
-          .order('fecha', { ascending: true }),
+          .eq('fecha', selectedDate)
+          .order('fecha', { ascending: false }),
 
         supabase
           .from(HOJA_VIAJE_LIVE_TABLE)
           .select('id, fecha, data, updated_at')
-          .gte('fecha', start)
-          .lt('fecha', end)
-          .order('fecha', { ascending: true })
+          .eq('fecha', selectedDate)
+          .order('updated_at', { ascending: false })
       ]);
 
       if(savedResp.error){
@@ -866,52 +846,59 @@
         return;
       }
 
-      const acumulado = buildEmptyAccumulated();
-
-      const savedByFecha = new Set();
-
-      (savedResp.data || []).forEach(row => {
-        const fecha = row.fecha;
-        if(!fecha || !isDateInsideRange(fecha, start, end)) return;
-        savedByFecha.add(fecha);
-        extractKgFromResultados(row.resultados || {}, fecha, acumulado);
-      });
-
-      (liveResp.data || []).forEach(row => {
-        const fecha = row.fecha;
-        if(!fecha || !isDateInsideRange(fecha, start, end)) return;
-
-        const payload = row.data || {};
-        const resultados = payload.resultados || {};
-
-        if(savedByFecha.has(fecha)){
-          return;
-        }
-
-        extractKgFromResultados(resultados, fecha, acumulado);
-      });
-
       ensureKgRows();
+
+      const savedRows = savedResp.data || [];
+      const liveRows = liveResp.data || [];
+
+      if(savedRows.length > 0){
+        const mergedSaved = buildEmptyDayRows();
+
+        savedRows.forEach(row => {
+          const acc = extractKgFromResultados(row.resultados || {});
+          productKeys.forEach(p => {
+            mergedSaved[p].kgDia += Number(acc[p]?.kgDia || 0);
+          });
+        });
+
+        state.kgProduccion = rowsFromAccumulated(mergedSaved, 'guardado');
+        rerenderAll();
+        setKgSyncStatus(`Guardado ${selectedDate}`, true);
+
+        if(showAlert) alert('Kg del día cargados desde hoja_viaje.');
+        return;
+      }
+
+      if(liveRows.length > 0){
+        const latestLive = liveRows[0];
+        const liveResultados = latestLive?.data?.resultados || {};
+        const accLive = extractKgFromResultados(liveResultados);
+
+        state.kgProduccion = rowsFromAccumulated(accLive, 'live');
+        rerenderAll();
+        setKgSyncStatus(`Live ${selectedDate}`, true);
+
+        if(showAlert) alert('Kg del día cargados desde hoja_viaje_live.');
+        return;
+      }
 
       state.kgProduccion = productKeys.map(producto => ({
         producto,
-        kgMes: Number(acumulado[producto]?.kgMes || 0),
-        fechas: acumulado[producto]?.fechas || {}
+        kgDia: 0,
+        fuente: 'sin datos'
       }));
 
       rerenderAll();
-      setKgSyncStatus(`Sincronizado ${monthValue}`, true);
+      setKgSyncStatus(`Sin datos ${selectedDate}`, true);
 
-      if(showAlert){
-        alert('Kg Producción actualizado desde hoja_viaje y hoja_viaje_live.');
-      }
+      if(showAlert) alert('No hay datos para esa fecha.');
     }
 
     function scheduleSync(){
       clearTimeout(syncTimer);
       syncTimer = setTimeout(() => {
-        syncKgFromBothSources(false);
-      }, 350);
+        syncKgForSelectedDate(false);
+      }, 300);
     }
 
     function subscribeHojaViajeRealtime(){
@@ -925,11 +912,7 @@
         .on('*', () => {
           scheduleSync();
         })
-        .subscribe((status) => {
-          if(status === 'SUBSCRIBED'){
-            setKgSyncStatus('Escuchando hoja_viaje', true);
-          }
-        });
+        .subscribe();
     }
 
     function subscribeHojaViajeLiveRealtime(){
@@ -943,11 +926,7 @@
         .on('*', () => {
           scheduleSync();
         })
-        .subscribe((status) => {
-          if(status === 'SUBSCRIBED'){
-            setKgSyncStatus('Escuchando hoja_viaje_live', true);
-          }
-        });
+        .subscribe();
     }
 
     function renderTabs(){
@@ -968,7 +947,7 @@
 
     function calculateResultados(){
       const kgMap = {};
-      state.kgProduccion.forEach(r=>kgMap[r.producto] = Number(r.kgMes||0));
+      state.kgProduccion.forEach(r=>kgMap[r.producto] = Number(r.kgDia||0));
 
       const out = productKeys.map(p => ({
         producto:p,
@@ -1007,7 +986,7 @@
           <tr>
             <th class="stickyCol">Producto</th>
             <th>Costo total</th>
-            <th>Kg</th>
+            <th>Kg/día</th>
             <th>Costo/kg</th>
           </tr>
         </thead>
@@ -1091,34 +1070,26 @@
 
     function renderKg(){
       const tbl = document.getElementById('tblKg');
-
-      const allDates = Array.from(new Set(
-        state.kgProduccion.flatMap(r => Object.keys(r.fechas || {}))
-      )).sort((a,b)=> a.localeCompare(b));
+      const fecha = document.getElementById('kgDate')?.value || todayISO();
 
       tbl.innerHTML = `
         <thead>
           <tr>
             <th class="stickyCol">Producto</th>
-            <th>Kg/mes</th>
-            ${allDates.map(d=>`<th>${formatDateLabel(d)}</th>`).join('')}
-            <th>Total visible</th>
+            <th>Kg/día</th>
+            <th>Fuente</th>
+            <th>Fecha</th>
           </tr>
         </thead>
         <tbody>
-          ${state.kgProduccion.map((row)=>{
-            const totalVisible = allDates.reduce((a,d)=>a + Number(row.fechas?.[d] || 0), 0);
-            return `
-              <tr>
-                <td class="stickyCol"><b>${row.producto}</b></td>
-                <td class="num"><b>${formatPlain(row.kgMes || 0)}</b></td>
-                ${allDates.map(d=>`
-                  <td class="num">${formatPlain(row.fechas?.[d] || 0)}</td>
-                `).join('')}
-                <td class="num"><b>${formatPlain(totalVisible)}</b></td>
-              </tr>
-            `;
-          }).join('')}
+          ${state.kgProduccion.map((row)=>`
+            <tr>
+              <td class="stickyCol"><b>${row.producto}</b></td>
+              <td class="num"><b>${formatPlain(row.kgDia || 0)}</b></td>
+              <td class="center">${row.fuente || '-'}</td>
+              <td class="center">${fecha}</td>
+            </tr>
+          `).join('')}
         </tbody>
       `;
     }
@@ -1324,28 +1295,28 @@
       state = structuredClone(stateDefault);
       localStorage.removeItem(STORAGE_KEY);
       rerenderAll();
-      await syncKgFromBothSources(false);
+      await syncKgForSelectedDate(false);
     });
 
     document.getElementById('searchMatriz').addEventListener('input', renderMatriz);
 
     document.getElementById('btnSyncKg').addEventListener('click', ()=>{
-      syncKgFromBothSources(true);
+      syncKgForSelectedDate(true);
     });
 
-    document.getElementById('kgMonth').addEventListener('change', ()=>{
-      syncKgFromBothSources(false);
+    document.getElementById('kgDate').addEventListener('change', ()=>{
+      syncKgForSelectedDate(false);
     });
 
     document.addEventListener('DOMContentLoaded', async ()=>{
-      const monthInput = document.getElementById('kgMonth');
-      if(monthInput) monthInput.value = getCurrentMonthValue();
+      const dateInput = document.getElementById('kgDate');
+      if(dateInput) dateInput.value = todayISO();
 
       renderTabs();
       renderNewCostChecks();
       rerenderAll();
 
-      await syncKgFromBothSources(false);
+      await syncKgForSelectedDate(false);
       subscribeHojaViajeRealtime();
       subscribeHojaViajeLiveRealtime();
     });
