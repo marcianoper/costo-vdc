@@ -4,6 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Costos VDC 360°</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.6/dist/umd/supabase.min.js"></script>
+
   <style>
     :root{
       --brand:#0a7a3b;
@@ -391,6 +394,15 @@
       background:rgba(10,122,59,.10);
       color:var(--brand);
     }
+
+    .monthInput{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:900;
+      background:#fff;
+      color:var(--ink);
+    }
   </style>
 </head>
 <body>
@@ -398,13 +410,14 @@
     <section class="top">
       <h1>Costos VDC 360°</h1>
       <p>
-        Matriz de costos, kilos de producción, activos y resultados. Puedes editar valores directamente,
-        recalcular al momento y también agregar nuevos costos si sale alguno que no tenías contemplado.
+        Matriz de costos, kilos de producción, activos y resultados. Los kilos se alimentan automáticamente desde
+        Hoja de Viaje guardada y también desde Hoja de Viaje Live mientras van capturando.
       </p>
       <div class="toolbar">
         <span class="chip">Datos actualizados</span>
         <span class="chip">Matriz editable</span>
         <span class="chip">Agregar nuevos costos</span>
+        <span class="chip">Hoja de Viaje Live conectada</span>
       </div>
     </section>
 
@@ -499,7 +512,15 @@
       <div class="panelHead">
         <div>
           <h2>Kg Producción</h2>
-          <p>Producción mensual y desglose por fechas.</p>
+          <p>Kilos por producto y por fecha, tomados de Hoja de Viaje guardada y Hoja de Viaje Live.</p>
+        </div>
+        <div class="panelTools">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:1000;">
+            Mes:
+            <input type="month" id="kgMonth" class="monthInput">
+          </label>
+          <button class="btn" id="btnSyncKg">Sincronizar ahora</button>
+          <span class="badge" id="kgSyncStatus">Sin sincronizar</span>
         </div>
       </div>
       <div class="tableWrap">
@@ -545,11 +566,35 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "vdc_costos_html_v2";
+    const STORAGE_KEY = "vdc_costos_html_v4_live";
+
+    const supabase = window.supabase.createClient(
+      'https://rcegikeiaxptolrduguc.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZWdpa2VpYXhwdG9scmR1Z3VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2NTMyMDcsImV4cCI6MjA3MTIyOTIwN30.jbPM9F977zeITEmFA_xvVU6SCxlWWVCi3Dx7ZhFfTp8'
+    );
+
+    const HOJA_VIAJE_TABLE = 'hoja_viaje';
+    const HOJA_VIAJE_LIVE_TABLE = 'hoja_viaje_live';
 
     const productKeys = [
       "Bofe","Corazon","Tripa","Cabeza","Cuajo","Libro","Menudo","Pata Sucia","Teleco","Higado","Sebo"
     ];
+
+    const hojaViajeMap = {
+      "Bofe": "Bofe",
+      "Corazón": "Corazon",
+      "Corazon": "Corazon",
+      "Tripa de res": "Tripa",
+      "Cabeza de res": "Cabeza",
+      "Cuajo de res": "Cuajo",
+      "Libro de res": "Libro",
+      "Menudo sucio": "Menudo",
+      "Pata sucia": "Pata Sucia",
+      "Teleco": "Teleco",
+      "Hígado": "Higado",
+      "Higado": "Higado",
+      "Sebo": "Sebo"
+    };
 
     const stateDefault = {
       matriz: [
@@ -607,16 +652,16 @@
       ],
 
       kgProduccion: [
-        {"producto":"Bofe","kgMes":4809,"fechas":{"3-mar":276,"5-mar":550,"6-mar":391,"10-mar":276,"12-mar":558.8,"13-mar":391,"19-mar":481.6,"20-mar":368.6,"24-mar":409.8,"26-mar":405,"27-mar":329.2,"31-mar":372}},
-        {"producto":"Corazon","kgMes":3860.6,"fechas":{"3-mar":363.4,"5-mar":111,"6-mar":360.5,"10-mar":375.2,"12-mar":361,"13-mar":382,"19-mar":255.8,"20-mar":320.6,"24-mar":384.6,"26-mar":246,"27-mar":373.5,"31-mar":327}},
-        {"producto":"Tripa","kgMes":32056.9,"fechas":{"3-mar":2211.6,"5-mar":2432,"6-mar":2545.5,"10-mar":2546.5,"12-mar":3256.7,"13-mar":2498,"19-mar":3081,"20-mar":2515.4,"24-mar":2516.1,"26-mar":2897,"27-mar":2913.5,"31-mar":2643.6}},
-        {"producto":"Cabeza","kgMes":38679.5,"fechas":{"3-mar":3094.8,"5-mar":2818.5,"6-mar":3054.5,"10-mar":3159,"12-mar":3192.5,"13-mar":3382,"19-mar":3581.8,"20-mar":3330.4,"24-mar":3417,"26-mar":3532,"27-mar":3106,"31-mar":3011}},
-        {"producto":"Cuajo","kgMes":2861.2,"fechas":{"3-mar":231,"5-mar":198,"6-mar":236,"10-mar":245.2,"12-mar":236.5,"13-mar":244,"19-mar":253,"20-mar":253.5,"24-mar":251,"26-mar":233,"27-mar":251,"31-mar":229}},
-        {"producto":"Libro","kgMes":3770,"fechas":{"3-mar":302,"5-mar":301,"6-mar":304,"10-mar":363,"12-mar":293,"13-mar":338,"19-mar":304,"20-mar":334,"24-mar":327,"26-mar":270,"27-mar":312,"31-mar":322}},
-        {"producto":"Menudo","kgMes":23960.2,"fechas":{"3-mar":1969.5,"5-mar":846.6,"6-mar":2105,"10-mar":2270,"12-mar":2786,"13-mar":2008,"19-mar":1985,"20-mar":2078.5,"24-mar":2255,"26-mar":1750.1,"27-mar":1957.5,"31-mar":1949}},
-        {"producto":"Pata Sucia","kgMes":25297,"fechas":{"3-mar":1848,"5-mar":1848,"6-mar":2110,"10-mar":2052,"12-mar":2287,"13-mar":2331,"19-mar":2116,"20-mar":2187,"24-mar":2286,"26-mar":2173,"27-mar":2127,"31-mar":1932}},
-        {"producto":"Teleco","kgMes":4021.5,"fechas":{"3-mar":426.6,"5-mar":239,"6-mar":233.7,"10-mar":384,"12-mar":391.8,"13-mar":380.4,"19-mar":273,"20-mar":383.6,"24-mar":395.9,"26-mar":276,"27-mar":260.3,"31-mar":377.2}},
-        {"producto":"Higado","kgMes":13962.4,"fechas":{"3-mar":1088,"5-mar":1111.5,"6-mar":1087.5,"10-mar":1178,"12-mar":1149,"13-mar":1199,"19-mar":1272.4,"20-mar":1152,"24-mar":1188,"26-mar":1241,"27-mar":1196,"31-mar":1100}},
+        {"producto":"Bofe","kgMes":0,"fechas":{}},
+        {"producto":"Corazon","kgMes":0,"fechas":{}},
+        {"producto":"Tripa","kgMes":0,"fechas":{}},
+        {"producto":"Cabeza","kgMes":0,"fechas":{}},
+        {"producto":"Cuajo","kgMes":0,"fechas":{}},
+        {"producto":"Libro","kgMes":0,"fechas":{}},
+        {"producto":"Menudo","kgMes":0,"fechas":{}},
+        {"producto":"Pata Sucia","kgMes":0,"fechas":{}},
+        {"producto":"Teleco","kgMes":0,"fechas":{}},
+        {"producto":"Higado","kgMes":0,"fechas":{}},
         {"producto":"Sebo","kgMes":0,"fechas":{}}
       ],
 
@@ -675,6 +720,10 @@
       {id:"costosBase", label:"Costos Base"}
     ];
 
+    let hojaViajeSub = null;
+    let hojaViajeLiveSub = null;
+    let syncTimer = null;
+
     function loadState(){
       const saved = localStorage.getItem(STORAGE_KEY);
       if(saved){
@@ -699,6 +748,206 @@
       return new Intl.NumberFormat('es-MX',{
         maximumFractionDigits:2
       }).format(Number(n||0));
+    }
+
+    function getCurrentMonthValue(){
+      const now = new Date();
+      const m = String(now.getMonth()+1).padStart(2,'0');
+      return `${now.getFullYear()}-${m}`;
+    }
+
+    function getMonthRange(monthValue){
+      const [year, month] = monthValue.split('-').map(Number);
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 1);
+      return {
+        start: start.toISOString().slice(0,10),
+        end: end.toISOString().slice(0,10)
+      };
+    }
+
+    function formatDateLabel(isoDate){
+      const [y,m,d] = isoDate.split('-').map(Number);
+      const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      return `${d}-${meses[m-1]}`;
+    }
+
+    function setKgSyncStatus(text, ok = true){
+      const el = document.getElementById('kgSyncStatus');
+      if(!el) return;
+      el.textContent = text;
+      el.style.background = ok ? 'rgba(10,122,59,.10)' : 'rgba(185,28,28,.10)';
+      el.style.color = ok ? 'var(--brand)' : 'var(--danger)';
+    }
+
+    function ensureKgRows(){
+      const current = new Map((state.kgProduccion || []).map(r => [r.producto, r]));
+      state.kgProduccion = productKeys.map(p => {
+        const existing = current.get(p);
+        return existing || { producto:p, kgMes:0, fechas:{} };
+      });
+    }
+
+    function isDateInsideRange(fecha, start, end){
+      return fecha >= start && fecha < end;
+    }
+
+    function normalizeLineas(lineas){
+      if(!Array.isArray(lineas)) return [];
+      return lineas;
+    }
+
+    function buildEmptyAccumulated(){
+      const obj = {};
+      productKeys.forEach(p => {
+        obj[p] = { kgMes:0, fechas:{} };
+      });
+      return obj;
+    }
+
+    function addKgToAccumulated(acumulado, productoDestino, fecha, kg){
+      if(!productoDestino) return;
+      if(!acumulado[productoDestino]){
+        acumulado[productoDestino] = { kgMes:0, fechas:{} };
+      }
+      acumulado[productoDestino].kgMes += kg;
+      acumulado[productoDestino].fechas[fecha] = (acumulado[productoDestino].fechas[fecha] || 0) + kg;
+    }
+
+    function extractKgFromResultados(resultados, fecha, acumulado){
+      Object.entries(resultados || {}).forEach(([nombreHoja, lineas]) => {
+        const destino = hojaViajeMap[nombreHoja];
+        if(!destino) return;
+
+        const totalKgFecha = normalizeLineas(lineas).reduce((sum, item) => {
+          return sum + Number(item?.kg || 0);
+        }, 0);
+
+        addKgToAccumulated(acumulado, destino, fecha, totalKgFecha);
+      });
+    }
+
+    async function syncKgFromBothSources(showAlert = false){
+      const monthValue = document.getElementById('kgMonth')?.value || getCurrentMonthValue();
+      const { start, end } = getMonthRange(monthValue);
+
+      setKgSyncStatus('Sincronizando...', true);
+
+      const [
+        savedResp,
+        liveResp
+      ] = await Promise.all([
+        supabase
+          .from(HOJA_VIAJE_TABLE)
+          .select('fecha, resultados')
+          .gte('fecha', start)
+          .lt('fecha', end)
+          .order('fecha', { ascending: true }),
+
+        supabase
+          .from(HOJA_VIAJE_LIVE_TABLE)
+          .select('id, fecha, data, updated_at')
+          .gte('fecha', start)
+          .lt('fecha', end)
+          .order('fecha', { ascending: true })
+      ]);
+
+      if(savedResp.error){
+        console.error(savedResp.error);
+        setKgSyncStatus('Error hoja_viaje', false);
+        if(showAlert) alert('Error leyendo hoja_viaje: ' + savedResp.error.message);
+        return;
+      }
+
+      if(liveResp.error){
+        console.error(liveResp.error);
+        setKgSyncStatus('Error hoja_viaje_live', false);
+        if(showAlert) alert('Error leyendo hoja_viaje_live: ' + liveResp.error.message);
+        return;
+      }
+
+      const acumulado = buildEmptyAccumulated();
+
+      const savedByFecha = new Set();
+
+      (savedResp.data || []).forEach(row => {
+        const fecha = row.fecha;
+        if(!fecha || !isDateInsideRange(fecha, start, end)) return;
+        savedByFecha.add(fecha);
+        extractKgFromResultados(row.resultados || {}, fecha, acumulado);
+      });
+
+      (liveResp.data || []).forEach(row => {
+        const fecha = row.fecha;
+        if(!fecha || !isDateInsideRange(fecha, start, end)) return;
+
+        const payload = row.data || {};
+        const resultados = payload.resultados || {};
+
+        if(savedByFecha.has(fecha)){
+          return;
+        }
+
+        extractKgFromResultados(resultados, fecha, acumulado);
+      });
+
+      ensureKgRows();
+
+      state.kgProduccion = productKeys.map(producto => ({
+        producto,
+        kgMes: Number(acumulado[producto]?.kgMes || 0),
+        fechas: acumulado[producto]?.fechas || {}
+      }));
+
+      rerenderAll();
+      setKgSyncStatus(`Sincronizado ${monthValue}`, true);
+
+      if(showAlert){
+        alert('Kg Producción actualizado desde hoja_viaje y hoja_viaje_live.');
+      }
+    }
+
+    function scheduleSync(){
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => {
+        syncKgFromBothSources(false);
+      }, 350);
+    }
+
+    function subscribeHojaViajeRealtime(){
+      if(hojaViajeSub){
+        try { supabase.removeSubscription(hojaViajeSub); } catch(e){}
+        hojaViajeSub = null;
+      }
+
+      hojaViajeSub = supabase
+        .from(HOJA_VIAJE_TABLE)
+        .on('*', () => {
+          scheduleSync();
+        })
+        .subscribe((status) => {
+          if(status === 'SUBSCRIBED'){
+            setKgSyncStatus('Escuchando hoja_viaje', true);
+          }
+        });
+    }
+
+    function subscribeHojaViajeLiveRealtime(){
+      if(hojaViajeLiveSub){
+        try { supabase.removeSubscription(hojaViajeLiveSub); } catch(e){}
+        hojaViajeLiveSub = null;
+      }
+
+      hojaViajeLiveSub = supabase
+        .from(HOJA_VIAJE_LIVE_TABLE)
+        .on('*', () => {
+          scheduleSync();
+        })
+        .subscribe((status) => {
+          if(status === 'SUBSCRIBED'){
+            setKgSyncStatus('Escuchando hoja_viaje_live', true);
+          }
+        });
     }
 
     function renderTabs(){
@@ -842,32 +1091,27 @@
 
     function renderKg(){
       const tbl = document.getElementById('tblKg');
+
       const allDates = Array.from(new Set(
         state.kgProduccion.flatMap(r => Object.keys(r.fechas || {}))
-      )).sort((a,b)=>{
-        const order = ["3-mar","5-mar","6-mar","10-mar","12-mar","13-mar","19-mar","20-mar","24-mar","26-mar","27-mar","31-mar"];
-        return order.indexOf(a)-order.indexOf(b);
-      });
+      )).sort((a,b)=> a.localeCompare(b));
 
       tbl.innerHTML = `
         <thead>
           <tr>
             <th class="stickyCol">Producto</th>
             <th>Kg/mes</th>
-            ${allDates.map(d=>`<th>${d}</th>`).join('')}
+            ${allDates.map(d=>`<th>${formatDateLabel(d)}</th>`).join('')}
             <th>Total visible</th>
           </tr>
         </thead>
         <tbody>
-          ${state.kgProduccion.map((row, index)=>{
+          ${state.kgProduccion.map((row)=>{
             const totalVisible = allDates.reduce((a,d)=>a + Number(row.fechas?.[d] || 0), 0);
             return `
               <tr>
                 <td class="stickyCol"><b>${row.producto}</b></td>
-                <td class="num">
-                  <input class="inputNum" type="number" step="0.01" value="${Number(row.kgMes||0)}"
-                    onchange="updateKgMes(${index}, this.value)" />
-                </td>
+                <td class="num"><b>${formatPlain(row.kgMes || 0)}</b></td>
                 ${allDates.map(d=>`
                   <td class="num">${formatPlain(row.fechas?.[d] || 0)}</td>
                 `).join('')}
@@ -1007,11 +1251,6 @@
       rerenderAll();
     }
 
-    window.updateKgMes = function(index, value){
-      state.kgProduccion[index].kgMes = Number(value || 0);
-      rerenderAll();
-    }
-
     window.deleteCosto = function(index){
       const item = state.matriz[index];
       if(!item) return;
@@ -1080,18 +1319,36 @@
       URL.revokeObjectURL(a.href);
     });
 
-    document.getElementById('btnReset').addEventListener('click', ()=>{
+    document.getElementById('btnReset').addEventListener('click', async ()=>{
       if(!confirm('¿Seguro que quieres restablecer los datos originales del archivo nuevo?')) return;
       state = structuredClone(stateDefault);
       localStorage.removeItem(STORAGE_KEY);
       rerenderAll();
+      await syncKgFromBothSources(false);
     });
 
     document.getElementById('searchMatriz').addEventListener('input', renderMatriz);
 
-    renderTabs();
-    renderNewCostChecks();
-    rerenderAll();
+    document.getElementById('btnSyncKg').addEventListener('click', ()=>{
+      syncKgFromBothSources(true);
+    });
+
+    document.getElementById('kgMonth').addEventListener('change', ()=>{
+      syncKgFromBothSources(false);
+    });
+
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const monthInput = document.getElementById('kgMonth');
+      if(monthInput) monthInput.value = getCurrentMonthValue();
+
+      renderTabs();
+      renderNewCostChecks();
+      rerenderAll();
+
+      await syncKgFromBothSources(false);
+      subscribeHojaViajeRealtime();
+      subscribeHojaViajeLiveRealtime();
+    });
   </script>
 </body>
 </html>
