@@ -555,13 +555,11 @@
   <script>
     const STORAGE_KEY = "vdc_costos_html_v7_materia_prima_desde_supabase";
 
-    // Proyecto de costos / hoja de viaje
     const supabase = window.supabase.createClient(
       'https://rcegikeiaxptolrduguc.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZWdpa2VpYXhwdG9scmR1Z3VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2NTMyMDcsImV4cCI6MjA3MTIyOTIwN30.jbPM9F977zeITEmFA_xvVU6SCxlWWVCi3Dx7ZhFfTp8'
     );
 
-    // Proyecto donde guardas resumen_operacion_actual
     const supabaseResumen = window.supabase.createClient(
       'https://lujroedkbgffobyblbie.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1anJvZWRrYmdmZm9ieWJsYmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxODkzNDgsImV4cCI6MjA3MDc2NTM0OH0.bSbBZeS59aPSEGPj1YGcmZCyQTfgf3fz9pNDuR2ID7c'
@@ -571,6 +569,9 @@
     const HOJA_VIAJE_LIVE_TABLE = 'hoja_viaje_live';
     const RESUMEN_OPERACION_TABLE = 'resumen_operacion_actual';
     const RESUMEN_CLAVE = 'operacion_actual';
+
+    const COSTOS_PROMEDIO_TABLE = 'costos_promedio_actual';
+    const COSTOS_PROMEDIO_CLAVE = 'actual';
 
     const EXCLUDED_PRODUCTS = new Set(["Bofe","Higado","Sebo"]);
 
@@ -675,6 +676,7 @@
     let hojaViajeLiveSub = null;
     let resumenOperacionSub = null;
     let syncTimer = null;
+    let saveCostoPromedioTimer = null;
 
     function loadState(){
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -806,6 +808,31 @@
       if(idx >= 0){
         state.matriz[idx].costo = materiaPrima;
       }
+    }
+
+    async function saveCostoPromedioActual(valor){
+      const fechaRef = document.getElementById('kgDate')?.value || todayISO();
+
+      const payload = {
+        clave: COSTOS_PROMEDIO_CLAVE,
+        costo_promedio_kg: Number(valor || 0),
+        fecha_referencia: fechaRef
+      };
+
+      const { error } = await supabaseResumen
+        .from(COSTOS_PROMEDIO_TABLE)
+        .upsert(payload, { onConflict: 'clave' });
+
+      if(error){
+        console.error('Error guardando costo promedio actual:', error);
+      }
+    }
+
+    function scheduleSaveCostoPromedio(valor){
+      clearTimeout(saveCostoPromedioTimer);
+      saveCostoPromedioTimer = setTimeout(() => {
+        saveCostoPromedioActual(valor);
+      }, 350);
     }
 
     async function syncKgForSelectedDate(showAlert = false){
@@ -1009,6 +1036,8 @@
       document.getElementById('kpiKg').textContent = formatPlain(totalKg);
       document.getElementById('kpiProducts').textContent = activeProducts;
       document.getElementById('kpiAvg').textContent = formatMoney(avg);
+
+      scheduleSaveCostoPromedio(avg);
     }
 
     function renderNewCostChecks(){
