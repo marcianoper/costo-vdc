@@ -445,7 +445,7 @@
       <h1>Costos VDC 360°</h1>
       <p>
         Matriz de costos y kilos de producción. Los kilos del día se alimentan desde Hoja de Viaje
-        y el costo de <strong>Materia prima</strong> se toma automáticamente desde la página de facturas por fecha.
+        y el costo de <strong>Materia prima</strong> se toma automáticamente desde el valor guardado de <strong>Total operación actual</strong>.
       </p>
       <div class="toolbar">
         <span class="chip">Vista diaria</span>
@@ -488,7 +488,7 @@
       <div class="panelHead">
         <div>
           <h2>Matriz</h2>
-          <p>Edita costos, activa o desactiva productos y agrega nuevos conceptos. Materia prima se actualiza sola.</p>
+          <p>Edita costos, activa o desactiva productos y agrega nuevos conceptos. Materia prima se actualiza sola desde Supabase.</p>
         </div>
         <div class="panelTools">
           <button class="btn" id="btnGuardar">Guardar en navegador</button>
@@ -553,16 +553,24 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "vdc_costos_html_v6_materia_prima_auto";
-    const FACTURAS_STORAGE_KEY = "vdc_viajes_operacion_v2";
+    const STORAGE_KEY = "vdc_costos_html_v7_materia_prima_desde_supabase";
 
+    // Proyecto de costos / hoja de viaje
     const supabase = window.supabase.createClient(
       'https://rcegikeiaxptolrduguc.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZWdpa2VpYXhwdG9scmR1Z3VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2NTMyMDcsImV4cCI6MjA3MTIyOTIwN30.jbPM9F977zeITEmFA_xvVU6SCxlWWVCi3Dx7ZhFfTp8'
     );
 
+    // Proyecto donde guardas resumen_operacion_actual
+    const supabaseResumen = window.supabase.createClient(
+      'https://lujroedkbgffobyblbie.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1anJvZWRrYmdmZm9ieWJsYmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxODkzNDgsImV4cCI6MjA3MDc2NTM0OH0.bSbBZeS59aPSEGPj1YGcmZCyQTfgf3fz9pNDuR2ID7c'
+    );
+
     const HOJA_VIAJE_TABLE = 'hoja_viaje';
     const HOJA_VIAJE_LIVE_TABLE = 'hoja_viaje_live';
+    const RESUMEN_OPERACION_TABLE = 'resumen_operacion_actual';
+    const RESUMEN_CLAVE = 'operacion_actual';
 
     const EXCLUDED_PRODUCTS = new Set(["Bofe","Higado","Sebo"]);
 
@@ -665,6 +673,7 @@
 
     let hojaViajeSub = null;
     let hojaViajeLiveSub = null;
+    let resumenOperacionSub = null;
     let syncTimer = null;
 
     function loadState(){
@@ -774,32 +783,24 @@
       }));
     }
 
-    function getMateriaPrimaFromFacturas(fecha){
-      let rows = [];
-      try{
-        rows = JSON.parse(localStorage.getItem(FACTURAS_STORAGE_KEY)) || [];
-      }catch(e){
-        rows = [];
+    async function getMateriaPrimaFromSupabase(){
+      const { data, error } = await supabaseResumen
+        .from(RESUMEN_OPERACION_TABLE)
+        .select('total_operacion, fecha_viaje, viaje, updated_at')
+        .eq('clave', RESUMEN_CLAVE)
+        .limit(1);
+
+      if(error){
+        console.error('Error leyendo resumen_operacion_actual:', error);
+        return 0;
       }
 
-      let totalOperacion = 0;
-
-      rows
-        .filter(r => r && r.fecha === fecha)
-        .forEach(r => {
-          const kilos = Number(r.kilos || 0);
-          const precioKg = Number(r.precioKg || 0);
-          const costoDia = Number(r.costoDia || 0);
-          const costoFactura = kilos * precioKg;
-          totalOperacion += (costoFactura + costoDia);
-        });
-
-      return totalOperacion;
+      const row = Array.isArray(data) && data.length ? data[0] : null;
+      return Number(row?.total_operacion || 0);
     }
 
-    function setMateriaPrimaCostForSelectedDate(){
-      const fecha = document.getElementById('kgDate')?.value || todayISO();
-      const materiaPrima = getMateriaPrimaFromFacturas(fecha);
+    async function setMateriaPrimaCostForSelectedDate(){
+      const materiaPrima = await getMateriaPrimaFromSupabase();
 
       const idx = state.matriz.findIndex(r => String(r.concepto).trim().toLowerCase() === 'materia prima');
       if(idx >= 0){
@@ -857,7 +858,7 @@
 
         state.kgProduccion = rowsFromAccumulated(mergedSaved, 'guardado');
         forceExcludedProductsToZero();
-        setMateriaPrimaCostForSelectedDate();
+        await setMateriaPrimaCostForSelectedDate();
         rerenderAll();
         setKgSyncStatus(`Guardado ${selectedDate}`, true);
 
@@ -872,7 +873,7 @@
 
         state.kgProduccion = rowsFromAccumulated(accLive, 'live');
         forceExcludedProductsToZero();
-        setMateriaPrimaCostForSelectedDate();
+        await setMateriaPrimaCostForSelectedDate();
         rerenderAll();
         setKgSyncStatus(`Live ${selectedDate}`, true);
 
@@ -887,7 +888,7 @@
       }));
 
       forceExcludedProductsToZero();
-      setMateriaPrimaCostForSelectedDate();
+      await setMateriaPrimaCostForSelectedDate();
       rerenderAll();
       setKgSyncStatus(`Sin datos ${selectedDate}`, true);
 
@@ -925,6 +926,21 @@
         .from(HOJA_VIAJE_LIVE_TABLE)
         .on('*', () => {
           scheduleSync();
+        })
+        .subscribe();
+    }
+
+    function subscribeResumenOperacionRealtime(){
+      if(resumenOperacionSub){
+        try { supabaseResumen.removeSubscription(resumenOperacionSub); } catch(e){}
+        resumenOperacionSub = null;
+      }
+
+      resumenOperacionSub = supabaseResumen
+        .from(RESUMEN_OPERACION_TABLE)
+        .on('*', async () => {
+          await setMateriaPrimaCostForSelectedDate();
+          rerenderAll();
         })
         .subscribe();
     }
@@ -1184,7 +1200,7 @@
       state = structuredClone(stateDefault);
       localStorage.removeItem(STORAGE_KEY);
       forceExcludedProductsToZero();
-      setMateriaPrimaCostForSelectedDate();
+      await setMateriaPrimaCostForSelectedDate();
       rerenderAll();
       await syncKgForSelectedDate(false);
     });
@@ -1199,13 +1215,6 @@
       syncKgForSelectedDate(false);
     });
 
-    window.addEventListener('storage', (e) => {
-      if(e.key === FACTURAS_STORAGE_KEY){
-        setMateriaPrimaCostForSelectedDate();
-        rerenderAll();
-      }
-    });
-
     document.addEventListener('DOMContentLoaded', async ()=>{
       const dateInput = document.getElementById('kgDate');
       if(dateInput) dateInput.value = todayISO();
@@ -1213,12 +1222,13 @@
       renderTabs();
       renderNewCostChecks();
       forceExcludedProductsToZero();
-      setMateriaPrimaCostForSelectedDate();
+      await setMateriaPrimaCostForSelectedDate();
       rerenderAll();
 
       await syncKgForSelectedDate(false);
       subscribeHojaViajeRealtime();
       subscribeHojaViajeLiveRealtime();
+      subscribeResumenOperacionRealtime();
     });
   </script>
 </body>
