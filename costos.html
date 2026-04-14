@@ -567,11 +567,8 @@
 
     const HOJA_VIAJE_TABLE = 'hoja_viaje';
     const HOJA_VIAJE_LIVE_TABLE = 'hoja_viaje_live';
-    const RESUMEN_OPERACION_TABLE = 'resumen_operacion_actual';
-    const RESUMEN_CLAVE = 'operacion_actual';
-
-    const COSTOS_PROMEDIO_TABLE = 'costos_promedio_actual';
-    const COSTOS_PROMEDIO_CLAVE = 'actual';
+    const VIAJES_OPERACION_TABLE = 'viajes_operacion';
+    const COSTOS_PROMEDIO_TABLE = 'costos_promedio_por_fecha';
 
     const EXCLUDED_PRODUCTS = new Set(["Bofe","Higado","Sebo"]);
 
@@ -786,20 +783,31 @@
     }
 
     async function getMateriaPrimaFromSupabase(){
-      const { data, error } = await supabaseResumen
-        .from(RESUMEN_OPERACION_TABLE)
-        .select('total_operacion, fecha_viaje, viaje, updated_at')
-        .eq('clave', RESUMEN_CLAVE)
-        .limit(1);
+  const fechaRef = document.getElementById('kgDate')?.value || todayISO();
 
-      if(error){
-        console.error('Error leyendo resumen_operacion_actual:', error);
-        return 0;
-      }
+  const { data, error } = await supabaseResumen
+    .from(VIAJES_OPERACION_TABLE)
+    .select('kilos, precio_kg, costo_dia')
+    .eq('fecha', fechaRef);
 
-      const row = Array.isArray(data) && data.length ? data[0] : null;
-      return Number(row?.total_operacion || 0);
-    }
+  if(error){
+    console.error('Error leyendo viajes_operacion por fecha:', error);
+    return 0;
+  }
+
+  const rows = Array.isArray(data) ? data : [];
+
+  let totalOperacion = 0;
+  rows.forEach(row => {
+    const kilos = Number(row.kilos || 0);
+    const precioKg = Number(row.precio_kg || 0);
+    const costoDia = Number(row.costo_dia || 0);
+    const costoFactura = kilos * precioKg;
+    totalOperacion += (costoFactura + costoDia);
+  });
+
+  return totalOperacion;
+}
 
     async function setMateriaPrimaCostForSelectedDate(){
       const materiaPrima = await getMateriaPrimaFromSupabase();
@@ -810,31 +818,30 @@
       }
     }
 
-    async function saveCostoPromedioActual(valor){
-      const fechaRef = document.getElementById('kgDate')?.value || todayISO();
+    async function saveCostoPromedioActual(valor, totalCost, totalKg){
+  const fechaRef = document.getElementById('kgDate')?.value || todayISO();
 
-      const payload = {
-        clave: COSTOS_PROMEDIO_CLAVE,
-        costo_promedio_kg: Number(valor || 0),
-        fecha_referencia: fechaRef
-      };
+  const payload = {
+    fecha: fechaRef,
+    costo_promedio_kg: Number(valor || 0),
+    total_cost: Number(totalCost || 0),
+    total_kg: Number(totalKg || 0)
+  };
 
-      const { error } = await supabaseResumen
-        .from(COSTOS_PROMEDIO_TABLE)
-        .upsert(payload, { onConflict: 'clave' });
+  const { error } = await supabaseResumen
+    .from(COSTOS_PROMEDIO_TABLE)
+    .upsert(payload, { onConflict: 'fecha' });
 
-      if(error){
-        console.error('Error guardando costo promedio actual:', error);
-      }
-    }
-
-    function scheduleSaveCostoPromedio(valor){
-      clearTimeout(saveCostoPromedioTimer);
-      saveCostoPromedioTimer = setTimeout(() => {
-        saveCostoPromedioActual(valor);
-      }, 350);
-    }
-
+  if(error){
+    console.error('Error guardando costo promedio por fecha:', error);
+  }
+}
+    ffunction scheduleSaveCostoPromedio(valor, totalCost, totalKg){
+  clearTimeout(saveCostoPromedioTimer);
+  saveCostoPromedioTimer = setTimeout(() => {
+    saveCostoPromedioActual(valor, totalCost, totalKg);
+  }, 350);
+}
     async function syncKgForSelectedDate(showAlert = false){
       const selectedDate = document.getElementById('kgDate')?.value || todayISO();
 
@@ -957,20 +964,22 @@
         .subscribe();
     }
 
-    function subscribeResumenOperacionRealtime(){
-      if(resumenOperacionSub){
-        try { supabaseResumen.removeSubscription(resumenOperacionSub); } catch(e){}
-        resumenOperacionSub = null;
-      }
+   function subscribeResumenOperacionRealtime(){
+  if(resumenOperacionSub){
+    try { supabaseResumen.removeSubscription(resumenOperacionSub); } catch(e){}
+    resumenOperacionSub = null;
+  }
 
-      resumenOperacionSub = supabaseResumen
-        .from(RESUMEN_OPERACION_TABLE)
-        .on('*', async () => {
-          await setMateriaPrimaCostForSelectedDate();
-          rerenderAll();
-        })
-        .subscribe();
-    }
+  const fechaRef = document.getElementById('kgDate')?.value || todayISO();
+
+  resumenOperacionSub = supabaseResumen
+    .from(`${VIAJES_OPERACION_TABLE}:fecha=eq.${fechaRef}`)
+    .on('*', async () => {
+      await setMateriaPrimaCostForSelectedDate();
+      rerenderAll();
+    })
+    .subscribe();
+}
 
     function renderTabs(){
       const box = document.getElementById('tabs');
@@ -1026,19 +1035,19 @@
     }
 
     function updateKPIs(){
-      const resultados = calculateResultados();
-      const totalCost = state.matriz.reduce((a,b)=>a + Number(b.costo||0),0);
-      const totalKg = resultados.reduce((a,b)=>a + Number(b.kg||0),0);
-      const activeProducts = resultados.filter(x=>x.kg>0).length;
-      const avg = totalKg>0 ? totalCost/totalKg : 0;
+  const resultados = calculateResultados();
+  const totalCost = state.matriz.reduce((a,b)=>a + Number(b.costo||0),0);
+  const totalKg = resultados.reduce((a,b)=>a + Number(b.kg||0),0);
+  const activeProducts = resultados.filter(x=>x.kg>0).length;
+  const avg = totalKg>0 ? totalCost/totalKg : 0;
 
-      document.getElementById('kpiTotalCost').textContent = formatMoney(totalCost);
-      document.getElementById('kpiKg').textContent = formatPlain(totalKg);
-      document.getElementById('kpiProducts').textContent = activeProducts;
-      document.getElementById('kpiAvg').textContent = formatMoney(avg);
+  document.getElementById('kpiTotalCost').textContent = formatMoney(totalCost);
+  document.getElementById('kpiKg').textContent = formatPlain(totalKg);
+  document.getElementById('kpiProducts').textContent = activeProducts;
+  document.getElementById('kpiAvg').textContent = formatMoney(avg);
 
-      scheduleSaveCostoPromedio(avg);
-    }
+  scheduleSaveCostoPromedio(avg, totalCost, totalKg);
+}
 
     function renderNewCostChecks(){
       const box = document.getElementById('newCostChecks');
