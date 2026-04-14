@@ -445,12 +445,13 @@
       <h1>Costos VDC 360°</h1>
       <p>
         Matriz de costos y kilos de producción. Los kilos del día se alimentan desde Hoja de Viaje
-        y el costo de <strong>Materia prima</strong> se toma automáticamente desde el valor guardado de <strong>Total operación actual</strong>.
+        y el costo de <strong>Materia prima</strong> se toma automáticamente desde la facturación del día seleccionado.
       </p>
       <div class="toolbar">
         <span class="chip">Vista diaria</span>
         <span class="chip">Kg desde Hoja de Viaje</span>
-        <span class="chip">Materia prima automática</span>
+        <span class="chip">Materia prima por fecha</span>
+        <span class="chip">Promedio por fecha</span>
         <span class="chip">Hígado, Bofe y Sebo anulados</span>
       </div>
 
@@ -488,7 +489,7 @@
       <div class="panelHead">
         <div>
           <h2>Matriz</h2>
-          <p>Edita costos, activa o desactiva productos y agrega nuevos conceptos. Materia prima se actualiza sola desde Supabase.</p>
+          <p>Edita costos, activa o desactiva productos y agrega nuevos conceptos. Materia prima se actualiza sola por fecha.</p>
         </div>
         <div class="panelTools">
           <button class="btn" id="btnGuardar">Guardar en navegador</button>
@@ -553,7 +554,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "vdc_costos_html_v7_materia_prima_desde_supabase";
+    const STORAGE_KEY = "vdc_costos_html_v8_promedio_por_fecha";
 
     const supabase = window.supabase.createClient(
       'https://rcegikeiaxptolrduguc.supabase.co',
@@ -671,7 +672,7 @@
 
     let hojaViajeSub = null;
     let hojaViajeLiveSub = null;
-    let resumenOperacionSub = null;
+    let viajesOperacionSub = null;
     let syncTimer = null;
     let saveCostoPromedioTimer = null;
 
@@ -783,31 +784,31 @@
     }
 
     async function getMateriaPrimaFromSupabase(){
-  const fechaRef = document.getElementById('kgDate')?.value || todayISO();
+      const fechaRef = document.getElementById('kgDate')?.value || todayISO();
 
-  const { data, error } = await supabaseResumen
-    .from(VIAJES_OPERACION_TABLE)
-    .select('kilos, precio_kg, costo_dia')
-    .eq('fecha', fechaRef);
+      const { data, error } = await supabaseResumen
+        .from(VIAJES_OPERACION_TABLE)
+        .select('kilos, precio_kg, costo_dia')
+        .eq('fecha', fechaRef);
 
-  if(error){
-    console.error('Error leyendo viajes_operacion por fecha:', error);
-    return 0;
-  }
+      if(error){
+        console.error('Error leyendo viajes_operacion por fecha:', error);
+        return 0;
+      }
 
-  const rows = Array.isArray(data) ? data : [];
+      const rows = Array.isArray(data) ? data : [];
 
-  let totalOperacion = 0;
-  rows.forEach(row => {
-    const kilos = Number(row.kilos || 0);
-    const precioKg = Number(row.precio_kg || 0);
-    const costoDia = Number(row.costo_dia || 0);
-    const costoFactura = kilos * precioKg;
-    totalOperacion += (costoFactura + costoDia);
-  });
+      let totalOperacion = 0;
+      rows.forEach(row => {
+        const kilos = Number(row.kilos || 0);
+        const precioKg = Number(row.precio_kg || 0);
+        const costoDia = Number(row.costo_dia || 0);
+        const costoFactura = kilos * precioKg;
+        totalOperacion += (costoFactura + costoDia);
+      });
 
-  return totalOperacion;
-}
+      return totalOperacion;
+    }
 
     async function setMateriaPrimaCostForSelectedDate(){
       const materiaPrima = await getMateriaPrimaFromSupabase();
@@ -819,29 +820,31 @@
     }
 
     async function saveCostoPromedioActual(valor, totalCost, totalKg){
-  const fechaRef = document.getElementById('kgDate')?.value || todayISO();
+      const fechaRef = document.getElementById('kgDate')?.value || todayISO();
 
-  const payload = {
-    fecha: fechaRef,
-    costo_promedio_kg: Number(valor || 0),
-    total_cost: Number(totalCost || 0),
-    total_kg: Number(totalKg || 0)
-  };
+      const payload = {
+        fecha: fechaRef,
+        costo_promedio_kg: Number(valor || 0),
+        total_cost: Number(totalCost || 0),
+        total_kg: Number(totalKg || 0)
+      };
 
-  const { error } = await supabaseResumen
-    .from(COSTOS_PROMEDIO_TABLE)
-    .upsert(payload, { onConflict: 'fecha' });
+      const { error } = await supabaseResumen
+        .from(COSTOS_PROMEDIO_TABLE)
+        .upsert(payload, { onConflict: 'fecha' });
 
-  if(error){
-    console.error('Error guardando costo promedio por fecha:', error);
-  }
-}
-    ffunction scheduleSaveCostoPromedio(valor, totalCost, totalKg){
-  clearTimeout(saveCostoPromedioTimer);
-  saveCostoPromedioTimer = setTimeout(() => {
-    saveCostoPromedioActual(valor, totalCost, totalKg);
-  }, 350);
-}
+      if(error){
+        console.error('Error guardando costo promedio por fecha:', error);
+      }
+    }
+
+    function scheduleSaveCostoPromedio(valor, totalCost, totalKg){
+      clearTimeout(saveCostoPromedioTimer);
+      saveCostoPromedioTimer = setTimeout(() => {
+        saveCostoPromedioActual(valor, totalCost, totalKg);
+      }, 350);
+    }
+
     async function syncKgForSelectedDate(showAlert = false){
       const selectedDate = document.getElementById('kgDate')?.value || todayISO();
 
@@ -964,22 +967,22 @@
         .subscribe();
     }
 
-   function subscribeResumenOperacionRealtime(){
-  if(resumenOperacionSub){
-    try { supabaseResumen.removeSubscription(resumenOperacionSub); } catch(e){}
-    resumenOperacionSub = null;
-  }
+    function subscribeViajesOperacionRealtime(){
+      if(viajesOperacionSub){
+        try { supabaseResumen.removeSubscription(viajesOperacionSub); } catch(e){}
+        viajesOperacionSub = null;
+      }
 
-  const fechaRef = document.getElementById('kgDate')?.value || todayISO();
+      const fechaRef = document.getElementById('kgDate')?.value || todayISO();
 
-  resumenOperacionSub = supabaseResumen
-    .from(`${VIAJES_OPERACION_TABLE}:fecha=eq.${fechaRef}`)
-    .on('*', async () => {
-      await setMateriaPrimaCostForSelectedDate();
-      rerenderAll();
-    })
-    .subscribe();
-}
+      viajesOperacionSub = supabaseResumen
+        .from(`${VIAJES_OPERACION_TABLE}:fecha=eq.${fechaRef}`)
+        .on('*', async () => {
+          await setMateriaPrimaCostForSelectedDate();
+          rerenderAll();
+        })
+        .subscribe();
+    }
 
     function renderTabs(){
       const box = document.getElementById('tabs');
@@ -1035,19 +1038,19 @@
     }
 
     function updateKPIs(){
-  const resultados = calculateResultados();
-  const totalCost = state.matriz.reduce((a,b)=>a + Number(b.costo||0),0);
-  const totalKg = resultados.reduce((a,b)=>a + Number(b.kg||0),0);
-  const activeProducts = resultados.filter(x=>x.kg>0).length;
-  const avg = totalKg>0 ? totalCost/totalKg : 0;
+      const resultados = calculateResultados();
+      const totalCost = state.matriz.reduce((a,b)=>a + Number(b.costo||0),0);
+      const totalKg = resultados.reduce((a,b)=>a + Number(b.kg||0),0);
+      const activeProducts = resultados.filter(x=>x.kg>0).length;
+      const avg = totalKg>0 ? totalCost/totalKg : 0;
 
-  document.getElementById('kpiTotalCost').textContent = formatMoney(totalCost);
-  document.getElementById('kpiKg').textContent = formatPlain(totalKg);
-  document.getElementById('kpiProducts').textContent = activeProducts;
-  document.getElementById('kpiAvg').textContent = formatMoney(avg);
+      document.getElementById('kpiTotalCost').textContent = formatMoney(totalCost);
+      document.getElementById('kpiKg').textContent = formatPlain(totalKg);
+      document.getElementById('kpiProducts').textContent = activeProducts;
+      document.getElementById('kpiAvg').textContent = formatMoney(avg);
 
-  scheduleSaveCostoPromedio(avg, totalCost, totalKg);
-}
+      scheduleSaveCostoPromedio(avg, totalCost, totalKg);
+    }
 
     function renderNewCostChecks(){
       const box = document.getElementById('newCostChecks');
@@ -1249,8 +1252,9 @@
       syncKgForSelectedDate(true);
     });
 
-    document.getElementById('kgDate').addEventListener('change', ()=>{
-      syncKgForSelectedDate(false);
+    document.getElementById('kgDate').addEventListener('change', async ()=>{
+      await syncKgForSelectedDate(false);
+      subscribeViajesOperacionRealtime();
     });
 
     document.addEventListener('DOMContentLoaded', async ()=>{
@@ -1266,7 +1270,7 @@
       await syncKgForSelectedDate(false);
       subscribeHojaViajeRealtime();
       subscribeHojaViajeLiveRealtime();
-      subscribeResumenOperacionRealtime();
+      subscribeViajesOperacionRealtime();
     });
   </script>
 </body>
