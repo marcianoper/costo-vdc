@@ -445,13 +445,14 @@
       <h1>Costos VDC 360°</h1>
       <p>
         Matriz de costos y kilos de producción. Los kilos del día se alimentan desde Hoja de Viaje
-        y el costo de <strong>Materia prima</strong> se toma automáticamente desde la facturación del día seleccionado.
+        y el costo de <strong>Materia prima</strong> se toma automáticamente desde la facturación del
+        <strong>viaje aplicable</strong> según la fecha seleccionada.
       </p>
       <div class="toolbar">
         <span class="chip">Vista diaria</span>
         <span class="chip">Kg desde Hoja de Viaje</span>
         <span class="chip">Materia prima por fecha</span>
-        <span class="chip">Promedio por fecha</span>
+        <span class="chip">Promedio por fecha visualizada</span>
         <span class="chip">Hígado, Bofe y Sebo anulados</span>
       </div>
 
@@ -680,8 +681,7 @@
       const saved = localStorage.getItem(STORAGE_KEY);
       if(saved){
         try{
-          const parsed = JSON.parse(saved);
-          return parsed;
+          return JSON.parse(saved);
         }catch(e){}
       }
       return structuredClone(stateDefault);
@@ -689,20 +689,6 @@
 
     function saveState(){
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-
-    function formatMoney(n){
-      return new Intl.NumberFormat('es-MX',{
-        style:'currency',
-        currency:'MXN',
-        maximumFractionDigits:2
-      }).format(Number(n||0));
-    }
-
-    function formatPlain(n){
-      return new Intl.NumberFormat('es-MX',{
-        maximumFractionDigits:2
-      }).format(Number(n||0));
     }
 
     function todayISO(){
@@ -721,23 +707,17 @@
 
     function ensureKgRows(){
       const current = new Map((state.kgProduccion || []).map(r => [r.producto, r]));
-      state.kgProduccion = productKeys.map(p => {
-        const existing = current.get(p);
-        return existing || { producto:p, kgDia:0, fuente:'-' };
-      });
+      state.kgProduccion = productKeys.map(p => current.get(p) || { producto:p, kgDia:0, fuente:'-' });
       forceExcludedProductsToZero();
     }
 
     function normalizeLineas(lineas){
-      if(!Array.isArray(lineas)) return [];
-      return lineas;
+      return Array.isArray(lineas) ? lineas : [];
     }
 
     function buildEmptyDayRows(){
       const obj = {};
-      productKeys.forEach(p => {
-        obj[p] = { kgDia:0, fuente:'-' };
-      });
+      productKeys.forEach(p => obj[p] = { kgDia:0, fuente:'-' });
       return obj;
     }
 
@@ -751,6 +731,48 @@
       });
     }
 
+    function toLocalDateParts(dateStr){
+      const [y, m, d] = String(dateStr).split("-").map(Number);
+      return new Date(y, (m || 1) - 1, d || 1);
+    }
+
+    function formatDateLocal(date){
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function addDays(date, days){
+      const copy = new Date(date);
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+
+    function getApplicableViajeDate(selectedDateStr){
+      const date = toLocalDateParts(selectedDateStr);
+      const day = date.getDay();
+      let viajeDate;
+
+      if(day === 1){
+        viajeDate = addDays(date, -3); // lunes -> viernes
+      } else if(day === 2){
+        viajeDate = addDays(date, -4); // martes -> viernes
+      } else if(day === 3){
+        viajeDate = addDays(date, -1); // miércoles -> martes
+      } else if(day === 4){
+        viajeDate = addDays(date, -2); // jueves -> martes
+      } else if(day === 5){
+        viajeDate = addDays(date, -1); // viernes -> jueves
+      } else if(day === 6){
+        viajeDate = addDays(date, -1); // sábado -> viernes
+      } else {
+        viajeDate = addDays(date, -2); // domingo -> viernes
+      }
+
+      return formatDateLocal(viajeDate);
+    }
+
     function extractKgFromResultados(resultados){
       const acumulado = buildEmptyDayRows();
 
@@ -758,10 +780,7 @@
         const destino = hojaViajeMap[nombreHoja];
         if(!destino) return;
 
-        const totalKg = normalizeLineas(lineas).reduce((sum, item) => {
-          return sum + Number(item?.kg || 0);
-        }, 0);
-
+        const totalKg = normalizeLineas(lineas).reduce((sum, item) => sum + Number(item?.kg || 0), 0);
         acumulado[destino].kgDia += totalKg;
       });
 
@@ -784,12 +803,13 @@
     }
 
     async function getMateriaPrimaFromSupabase(){
-      const fechaRef = document.getElementById('kgDate')?.value || todayISO();
+      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
+      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
 
       const { data, error } = await supabaseResumen
         .from(VIAJES_OPERACION_TABLE)
         .select('kilos, precio_kg, costo_dia')
-        .eq('fecha', fechaRef);
+        .eq('fecha', fechaViajeAplicable);
 
       if(error){
         console.error('Error leyendo viajes_operacion por fecha:', error);
@@ -797,8 +817,8 @@
       }
 
       const rows = Array.isArray(data) ? data : [];
-
       let totalOperacion = 0;
+
       rows.forEach(row => {
         const kilos = Number(row.kilos || 0);
         const precioKg = Number(row.precio_kg || 0);
@@ -812,18 +832,17 @@
 
     async function setMateriaPrimaCostForSelectedDate(){
       const materiaPrima = await getMateriaPrimaFromSupabase();
-
       const idx = state.matriz.findIndex(r => String(r.concepto).trim().toLowerCase() === 'materia prima');
-      if(idx >= 0){
-        state.matriz[idx].costo = materiaPrima;
-      }
+      if(idx >= 0) state.matriz[idx].costo = materiaPrima;
     }
 
     async function saveCostoPromedioActual(valor, totalCost, totalKg){
-      const fechaRef = document.getElementById('kgDate')?.value || todayISO();
+      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
+      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
 
       const payload = {
-        fecha: fechaRef,
+        fecha: fechaSeleccionada,
+        fecha_viaje_aplicable: fechaViajeAplicable,
         costo_promedio_kg: Number(valor || 0),
         total_cost: Number(totalCost || 0),
         total_kg: Number(totalKg || 0)
@@ -856,7 +875,6 @@
           .select('fecha, resultados')
           .eq('fecha', selectedDate)
           .order('fecha', { ascending: false }),
-
         supabase
           .from(HOJA_VIAJE_LIVE_TABLE)
           .select('id, fecha, data, updated_at')
@@ -947,9 +965,7 @@
 
       hojaViajeSub = supabase
         .from(HOJA_VIAJE_TABLE)
-        .on('*', () => {
-          scheduleSync();
-        })
+        .on('*', () => scheduleSync())
         .subscribe();
     }
 
@@ -961,9 +977,7 @@
 
       hojaViajeLiveSub = supabase
         .from(HOJA_VIAJE_LIVE_TABLE)
-        .on('*', () => {
-          scheduleSync();
-        })
+        .on('*', () => scheduleSync())
         .subscribe();
     }
 
@@ -973,10 +987,11 @@
         viajesOperacionSub = null;
       }
 
-      const fechaRef = document.getElementById('kgDate')?.value || todayISO();
+      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
+      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
 
       viajesOperacionSub = supabaseResumen
-        .from(`${VIAJES_OPERACION_TABLE}:fecha=eq.${fechaRef}`)
+        .from(`${VIAJES_OPERACION_TABLE}:fecha=eq.${fechaViajeAplicable}`)
         .on('*', async () => {
           await setMateriaPrimaCostForSelectedDate();
           rerenderAll();
@@ -1022,15 +1037,16 @@
         const cost = Number(row.costo || 0);
         const activeProducts = productKeys.filter(p => row.marks && row.marks[p]);
         const divisor = activeProducts.length;
+
         if(cost > 0 && divisor > 0){
           const share = cost / divisor;
-          activeProducts.forEach(p=>{
+          activeProducts.forEach(p => {
             out[idx[p]].costoTotal += share;
           });
         }
       });
 
-      out.forEach(r=>{
+      out.forEach(r => {
         r.costoKg = r.kg > 0 ? r.costoTotal / r.kg : 0;
       });
 
@@ -1042,7 +1058,7 @@
       const totalCost = state.matriz.reduce((a,b)=>a + Number(b.costo||0),0);
       const totalKg = resultados.reduce((a,b)=>a + Number(b.kg||0),0);
       const activeProducts = resultados.filter(x=>x.kg>0).length;
-      const avg = totalKg>0 ? totalCost/totalKg : 0;
+      const avg = totalKg > 0 ? totalCost / totalKg : 0;
 
       document.getElementById('kpiTotalCost').textContent = formatMoney(totalCost);
       document.getElementById('kpiKg').textContent = formatPlain(totalKg);
@@ -1152,12 +1168,12 @@
       if(concepto === 'materia prima') return;
       state.matriz[index].costo = Number(value || 0);
       rerenderAll();
-    }
+    };
 
     window.toggleMark = function(index, product, checked){
       state.matriz[index].marks[product] = checked ? 1 : 0;
       rerenderAll();
-    }
+    };
 
     window.deleteCosto = function(index){
       const item = state.matriz[index];
@@ -1168,9 +1184,9 @@
       }
       const ok = confirm(`¿Eliminar el costo "${item.concepto}"?`);
       if(!ok) return;
-      state.matriz.splice(index,1);
+      state.matriz.splice(index, 1);
       rerenderAll();
-    }
+    };
 
     function addNewCosto(){
       const concepto = document.getElementById('newConcepto').value.trim();
@@ -1188,7 +1204,8 @@
 
       const marks = {};
       let activos = 0;
-      document.querySelectorAll('[data-new-product]').forEach(ch=>{
+
+      document.querySelectorAll('[data-new-product]').forEach(ch => {
         const checked = ch.checked ? 1 : 0;
         marks[ch.dataset.newProduct] = checked;
         activos += checked;
@@ -1199,15 +1216,11 @@
         return;
       }
 
-      state.matriz.push({
-        concepto,
-        costo,
-        marks
-      });
+      state.matriz.push({ concepto, costo, marks });
 
       document.getElementById('newConcepto').value = '';
       document.getElementById('newCosto').value = '';
-      document.querySelectorAll('[data-new-product]').forEach(ch=>ch.checked = true);
+      document.querySelectorAll('[data-new-product]').forEach(ch => ch.checked = true);
 
       rerenderAll();
     }
@@ -1215,11 +1228,11 @@
     document.getElementById('btnAgregarCosto').addEventListener('click', addNewCosto);
 
     document.getElementById('btnMarcarTodos').addEventListener('click', ()=>{
-      document.querySelectorAll('[data-new-product]').forEach(ch=>ch.checked = true);
+      document.querySelectorAll('[data-new-product]').forEach(ch => ch.checked = true);
     });
 
     document.getElementById('btnLimpiarTodos').addEventListener('click', ()=>{
-      document.querySelectorAll('[data-new-product]').forEach(ch=>ch.checked = false);
+      document.querySelectorAll('[data-new-product]').forEach(ch => ch.checked = false);
     });
 
     document.getElementById('btnGuardar').addEventListener('click', ()=>{
@@ -1244,6 +1257,7 @@
       await setMateriaPrimaCostForSelectedDate();
       rerenderAll();
       await syncKgForSelectedDate(false);
+      subscribeViajesOperacionRealtime();
     });
 
     document.getElementById('searchMatriz').addEventListener('input', renderMatriz);
