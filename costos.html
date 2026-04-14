@@ -691,6 +691,12 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
+    function todayISO(){
+      const d = new Date();
+      const z = d.getTimezoneOffset() * 60000;
+      return new Date(d - z).toISOString().slice(0,10);
+    }
+
     function formatMoney(n){
       return new Intl.NumberFormat('es-MX',{
         style:'currency',
@@ -704,12 +710,6 @@
         minimumFractionDigits:2,
         maximumFractionDigits:2
       }).format(Number(n || 0));
-    }
-
-    function todayISO(){
-      const d = new Date();
-      const z = d.getTimezoneOffset() * 60000;
-      return new Date(d - z).toISOString().slice(0,10);
     }
 
     function setKgSyncStatus(text, ok = true){
@@ -1025,11 +1025,11 @@
           document.querySelectorAll('.tabBtn').forEach(x=>x.classList.remove('active'));
           document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
           btn.classList.add('active');
-          document.querySelector(\`.panel[data-tab="\${btn.dataset.tabOpen}"]\`).classList.add('active');
+          document.querySelector(`.panel[data-tab="${btn.dataset.tabOpen}"]`).classList.add('active');
         });
       });
 
-      const firstPanel = document.querySelector(\`.panel[data-tab="\${tabs[0].id}"]\`);
+      const firstPanel = document.querySelector(`.panel[data-tab="${tabs[0].id}"]`);
       if(firstPanel) firstPanel.classList.add('active');
     }
 
@@ -1197,7 +1197,7 @@
         alert('Materia prima es automática y no se puede eliminar.');
         return;
       }
-      const ok = confirm(\`¿Eliminar el costo "\${item.concepto}"?\`);
+      const ok = confirm(`¿Eliminar el costo "${item.concepto}"?`);
       if(!ok) return;
       state.matriz.splice(index, 1);
       rerenderAll();
