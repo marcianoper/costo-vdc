@@ -533,7 +533,7 @@
       <div class="panelHead">
         <div>
           <h2>Kg Producción</h2>
-          <p>Kilos por producto del día seleccionado, tomados de Hoja de Viaje y Hoja de Viaje Live.</p>
+          <p>Kilos por producto del día visual, tomados del viaje aplicable.</p>
         </div>
         <div class="panelTools">
           <label style="display:flex;align-items:center;gap:8px;font-weight:1000;">
@@ -881,19 +881,21 @@
 
     async function syncKgForSelectedDate(showAlert = false){
       const selectedDate = document.getElementById('kgDate')?.value || todayISO();
+      const fechaViajeAplicable = getApplicableViajeDate(selectedDate);
 
-      setKgSyncStatus('Sincronizando...', true);
+      setKgSyncStatus(`Sincronizando viaje ${fechaViajeAplicable}...`, true);
 
       const [savedResp, liveResp] = await Promise.all([
         supabase
           .from(HOJA_VIAJE_TABLE)
           .select('fecha, resultados')
-          .eq('fecha', selectedDate)
+          .eq('fecha', fechaViajeAplicable)
           .order('fecha', { ascending: false }),
+
         supabase
           .from(HOJA_VIAJE_LIVE_TABLE)
           .select('id, fecha, data, updated_at')
-          .eq('fecha', selectedDate)
+          .eq('fecha', fechaViajeAplicable)
           .order('updated_at', { ascending: false })
       ]);
 
@@ -926,13 +928,15 @@
           });
         });
 
-        state.kgProduccion = rowsFromAccumulated(mergedSaved, 'guardado');
+        state.kgProduccion = rowsFromAccumulated(mergedSaved, `guardado (${fechaViajeAplicable})`);
         forceExcludedProductsToZero();
         await setMateriaPrimaCostForSelectedDate();
         rerenderAll();
-        setKgSyncStatus(`Guardado ${selectedDate}`, true);
+        setKgSyncStatus(`Viaje aplicado: ${fechaViajeAplicable}`, true);
 
-        if(showAlert) alert('Kg del día cargados desde hoja_viaje.');
+        if(showAlert){
+          alert(`Kg cargados desde hoja_viaje del viaje aplicable ${fechaViajeAplicable}.`);
+        }
         return;
       }
 
@@ -941,28 +945,32 @@
         const liveResultados = latestLive?.data?.resultados || {};
         const accLive = extractKgFromResultados(liveResultados);
 
-        state.kgProduccion = rowsFromAccumulated(accLive, 'live');
+        state.kgProduccion = rowsFromAccumulated(accLive, `live (${fechaViajeAplicable})`);
         forceExcludedProductsToZero();
         await setMateriaPrimaCostForSelectedDate();
         rerenderAll();
-        setKgSyncStatus(`Live ${selectedDate}`, true);
+        setKgSyncStatus(`Live viaje: ${fechaViajeAplicable}`, true);
 
-        if(showAlert) alert('Kg del día cargados desde hoja_viaje_live.');
+        if(showAlert){
+          alert(`Kg cargados desde hoja_viaje_live del viaje aplicable ${fechaViajeAplicable}.`);
+        }
         return;
       }
 
       state.kgProduccion = productKeys.map(producto => ({
         producto,
         kgDia: 0,
-        fuente: EXCLUDED_PRODUCTS.has(producto) ? 'anulado' : 'sin datos'
+        fuente: EXCLUDED_PRODUCTS.has(producto) ? 'anulado' : `sin datos (${fechaViajeAplicable})`
       }));
 
       forceExcludedProductsToZero();
       await setMateriaPrimaCostForSelectedDate();
       rerenderAll();
-      setKgSyncStatus(`Sin datos ${selectedDate}`, true);
+      setKgSyncStatus(`Sin datos viaje ${fechaViajeAplicable}`, false);
 
-      if(showAlert) alert('No hay datos para esa fecha.');
+      if(showAlert){
+        alert(`No hay datos en hoja de viaje para el viaje aplicable ${fechaViajeAplicable}.`);
+      }
     }
 
     function scheduleSync(){
@@ -1146,7 +1154,8 @@
 
     function renderKg(){
       const tbl = document.getElementById('tblKg');
-      const fecha = document.getElementById('kgDate')?.value || todayISO();
+      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
+      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
 
       tbl.innerHTML = `
         <thead>
@@ -1154,7 +1163,8 @@
             <th class="stickyCol">Producto</th>
             <th>Kg/día</th>
             <th>Fuente</th>
-            <th>Fecha</th>
+            <th>Fecha visual</th>
+            <th>Viaje aplicado</th>
           </tr>
         </thead>
         <tbody>
@@ -1163,7 +1173,8 @@
               <td class="stickyCol"><b>${row.producto}</b></td>
               <td class="num"><b>${formatPlain(EXCLUDED_PRODUCTS.has(row.producto) ? 0 : (row.kgDia || 0))}</b></td>
               <td class="center">${EXCLUDED_PRODUCTS.has(row.producto) ? 'anulado' : (row.fuente || '-')}</td>
-              <td class="center">${fecha}</td>
+              <td class="center">${fechaSeleccionada}</td>
+              <td class="center">${fechaViajeAplicable}</td>
             </tr>
           `).join('')}
         </tbody>
