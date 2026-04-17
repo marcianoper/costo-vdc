@@ -1,0 +1,1317 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Costo VDC 360°</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.6/dist/umd/supabase.min.js"></script>
+
+  <style>
+    :root{
+      --brand:#0a7a3b;
+      --brand2:#0f9a52;
+      --bg:#f6f7f8;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --shadow:0 18px 50px rgba(2,6,23,.10);
+      --shadow2:0 10px 24px rgba(2,6,23,.08);
+      --danger:#b91c1c;
+      --ok:#0a7a3b;
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--ink);
+      background:
+        radial-gradient(1000px 420px at 15% -10%, rgba(15,154,82,.16), transparent 60%),
+        radial-gradient(900px 420px at 100% 0%, rgba(10,122,59,.12), transparent 55%),
+        var(--bg);
+    }
+
+    .wrap{max-width:1520px;margin:0 auto;padding:18px}
+
+    .top{
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      border-radius:24px;
+      padding:22px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .top:before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(500px 180px at 10% 10%, rgba(255,255,255,.18), transparent 60%),
+        radial-gradient(550px 220px at 100% 0%, rgba(255,255,255,.12), transparent 60%);
+      pointer-events:none;
+    }
+    .top h1{
+      margin:0;
+      font-size:30px;
+      font-weight:1000;
+      position:relative;
+    }
+    .top p{
+      margin:10px 0 0;
+      max-width:1000px;
+      line-height:1.5;
+      font-weight:700;
+      opacity:.95;
+      position:relative;
+    }
+
+    .toolbar{
+      margin-top:16px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.20);
+      color:#fff;
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      position:relative;
+    }
+
+    .topActions{
+      margin-top:16px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:2;
+    }
+
+    .backBtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 16px;
+      border-radius:14px;
+      background:#111827;
+      color:#fff;
+      text-decoration:none;
+      font-weight:1000;
+      box-shadow:0 10px 20px rgba(17,24,39,.18);
+      transition:.16s ease;
+    }
+    .backBtn:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.05);
+    }
+
+    .gridTop{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:16px;
+      margin:18px 0;
+    }
+    @media (max-width:1100px){
+      .gridTop{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media (max-width:700px){
+      .gridTop{grid-template-columns:1fr}
+    }
+
+    .kpi{
+      background:var(--card);
+      border-radius:22px;
+      padding:18px;
+      box-shadow:var(--shadow2);
+      border:1px solid rgba(15,23,42,.06);
+    }
+    .kpi .t{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:1000;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+    .kpi .v{
+      margin-top:8px;
+      font-size:28px;
+      font-weight:1000;
+      line-height:1;
+    }
+    .kpi .s{
+      margin-top:8px;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .nav{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:0 0 18px;
+    }
+    .tabBtn{
+      border:none;
+      cursor:pointer;
+      padding:12px 16px;
+      border-radius:14px;
+      background:#fff;
+      color:var(--ink);
+      font-weight:1000;
+      box-shadow:var(--shadow2);
+      border:1px solid rgba(15,23,42,.06);
+      transition:.16s ease;
+    }
+    .tabBtn.active{
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      transform:translateY(-1px);
+    }
+
+    .panel{
+      display:none;
+      background:var(--card);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      border:1px solid rgba(15,23,42,.06);
+      overflow:hidden;
+    }
+    .panel.active{display:block}
+
+    .panelHead{
+      padding:18px 18px 10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+    .panelHead h2{
+      margin:0;
+      font-size:22px;
+      font-weight:1000;
+    }
+    .panelHead p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:800;
+    }
+    .panelTools{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding:11px 14px;
+      border-radius:14px;
+      font-weight:1000;
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      box-shadow:0 10px 20px rgba(10,122,59,.20);
+    }
+    .btn.secondary{
+      background:#111827;
+      box-shadow:0 10px 20px rgba(17,24,39,.18);
+    }
+    .btn.ghost{
+      background:#fff;
+      color:var(--ink);
+      border:1px solid var(--line);
+      box-shadow:none;
+    }
+    .btn.danger{
+      background:linear-gradient(135deg,#dc2626,#991b1b);
+      box-shadow:0 10px 20px rgba(185,28,28,.18);
+    }
+
+    .searchRow{
+      padding:0 18px 16px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .searchRow input{
+      flex:1;
+      min-width:240px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:14px;
+      font-weight:800;
+      outline:none;
+      background:#fff;
+    }
+
+    .addBox{
+      margin:0 18px 16px;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:16px;
+    }
+    .addBox h3{
+      margin:0 0 12px;
+      font-size:16px;
+      font-weight:1000;
+    }
+    .addGrid{
+      display:grid;
+      grid-template-columns: 1.4fr .8fr;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    @media (max-width:820px){
+      .addGrid{grid-template-columns:1fr}
+    }
+    .field label{
+      display:block;
+      margin-bottom:6px;
+      font-size:12px;
+      font-weight:1000;
+      color:var(--muted);
+    }
+    .field input{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:11px 12px;
+      font-size:14px;
+      font-weight:800;
+      outline:none;
+      background:#fff;
+    }
+    .checks{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .checkItem{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:900;
+    }
+    .checkItem input{
+      width:18px;height:18px;
+      accent-color:var(--brand);
+    }
+
+    .tableWrap{
+      width:100%;
+      overflow:auto;
+      padding:0 18px 18px;
+    }
+    table{
+      width:max-content;
+      min-width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:13px;
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      z-index:3;
+      background:#f8fafc;
+      color:#0f172a;
+      border-bottom:1px solid var(--line);
+      border-top:1px solid var(--line);
+      padding:12px 10px;
+      text-align:center;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+    thead th:first-child{
+      border-left:1px solid var(--line);
+      border-top-left-radius:14px;
+    }
+    thead th:last-child{
+      border-right:1px solid var(--line);
+      border-top-right-radius:14px;
+    }
+    tbody td{
+      padding:9px 10px;
+      border-bottom:1px solid var(--line);
+      border-left:1px solid var(--line);
+      background:#fff;
+      white-space:nowrap;
+      vertical-align:middle;
+    }
+    tbody tr td:last-child{
+      border-right:1px solid var(--line);
+    }
+    tbody tr:hover td{
+      background:#fbfdfb;
+    }
+
+    .stickyCol{
+      position:sticky;
+      left:0;
+      z-index:2;
+      background:#fff;
+    }
+    tbody tr:hover .stickyCol{background:#fbfdfb}
+
+    .num{text-align:right;font-variant-numeric:tabular-nums}
+    .center{text-align:center}
+    .muted{color:var(--muted)}
+    .resultGood{color:var(--ok);font-weight:1000}
+
+    .inputNum{
+      width:120px;
+      border:1px solid #dbe2ea;
+      border-radius:10px;
+      padding:8px 9px;
+      font-size:13px;
+      font-weight:800;
+      text-align:right;
+      background:#fff;
+    }
+    .checkCell{
+      text-align:center;
+    }
+    .checkCell input{
+      width:18px;
+      height:18px;
+      accent-color:var(--brand);
+      cursor:pointer;
+    }
+
+    .footerNote{
+      padding:0 18px 18px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      line-height:1.45;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:1000;
+      background:rgba(10,122,59,.10);
+      color:var(--brand);
+    }
+
+    .dateInput{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:900;
+      background:#fff;
+      color:var(--ink);
+    }
+
+    .autoCell{
+      background:#f8fafc !important;
+      color:#0f172a;
+      font-weight:1000;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="top">
+      <h1>Costos VDC 360°</h1>
+      <p>
+        Matriz de costos y kilos de producción. Los kilos del día se alimentan desde Hoja de Viaje
+        y el costo de <strong>Materia prima</strong> se toma automáticamente desde la facturación del
+        <strong>viaje aplicable</strong> según la fecha seleccionada.
+      </p>
+      <div class="toolbar">
+        <span class="chip">Vista diaria</span>
+        <span class="chip">Kg desde Hoja de Viaje</span>
+        <span class="chip">Materia prima por fecha</span>
+        <span class="chip">Promedio por fecha visualizada</span>
+        <span class="chip">Hígado, Bofe y Sebo anulados</span>
+      </div>
+
+      <div class="topActions">
+        <a class="backBtn" href="https://marcianoper.github.io/vdc-central/">⬅ Regresar a Central</a>
+      </div>
+    </section>
+
+    <section class="gridTop">
+      <article class="kpi">
+        <div class="t">Costo total cargado</div>
+        <div class="v" id="kpiTotalCost">$0</div>
+        <div class="s">Suma de conceptos de la matriz</div>
+      </article>
+      <article class="kpi">
+        <div class="t">Kg totales del día</div>
+        <div class="v" id="kpiKg">0</div>
+        <div class="s">Sin considerar Hígado, Bofe y Sebo</div>
+      </article>
+      <article class="kpi">
+        <div class="t">Productos activos del día</div>
+        <div class="v" id="kpiProducts">0</div>
+        <div class="s">Productos con kg mayores a 0</div>
+      </article>
+      <article class="kpi">
+        <div class="t">Costo promedio por kg</div>
+        <div class="v" id="kpiAvg">$0</div>
+        <div class="s">Costo total / kg del día</div>
+      </article>
+    </section>
+
+    <nav class="nav" id="tabs"></nav>
+
+    <section class="panel" data-tab="matriz">
+      <div class="panelHead">
+        <div>
+          <h2>Matriz</h2>
+          <p>Edita costos, activa o desactiva productos y agrega nuevos conceptos. Materia prima se actualiza sola por fecha.</p>
+        </div>
+        <div class="panelTools">
+          <button class="btn" id="btnGuardar">Guardar en navegador</button>
+          <button class="btn ghost" id="btnExportJson">Exportar JSON</button>
+        </div>
+      </div>
+
+      <div class="searchRow">
+        <input type="text" id="searchMatriz" placeholder="Buscar concepto dentro de la matriz..." />
+      </div>
+
+      <div class="addBox">
+        <h3>Agregar nuevo costo</h3>
+        <div class="addGrid">
+          <div class="field">
+            <label>Nombre del concepto</label>
+            <input type="text" id="newConcepto" placeholder="Ej. Bolsa especial, refacción, herramienta, etc." />
+          </div>
+          <div class="field">
+            <label>Costo mensual</label>
+            <input type="number" id="newCosto" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+
+        <div class="checks" id="newCostChecks"></div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn" id="btnAgregarCosto">Agregar costo</button>
+          <button class="btn ghost" id="btnMarcarTodos">Marcar todos</button>
+          <button class="btn ghost" id="btnLimpiarTodos">Limpiar todos</button>
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table id="tblMatriz"></table>
+      </div>
+    </section>
+
+    <section class="panel" data-tab="kg">
+      <div class="panelHead">
+        <div>
+          <h2>Kg Producción</h2>
+          <p>Kilos por producto del día visual, tomados del viaje aplicable.</p>
+        </div>
+        <div class="panelTools">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:1000;">
+            Fecha:
+            <input type="date" id="kgDate" class="dateInput">
+          </label>
+          <button class="btn" id="btnSyncKg">Sincronizar ahora</button>
+          <button class="btn secondary" id="btnReset">Restablecer datos</button>
+          <span class="badge" id="kgSyncStatus">Sincronizar</span>
+        </div>
+      </div>
+      <div class="tableWrap">
+        <table id="tblKg"></table>
+      </div>
+      <div class="footerNote">
+        Aunque Hoja de Viaje envíe datos de <b>Hígado</b>, <b>Bofe</b> o <b>Sebo</b>, aquí siempre se tomarán como <b>0</b>.
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "vdc_costos_html_v8_promedio_por_fecha";
+
+    const supabase = window.supabase.createClient(
+      'https://rcegikeiaxptolrduguc.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZWdpa2VpYXhwdG9scmR1Z3VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2NTMyMDcsImV4cCI6MjA3MTIyOTIwN30.jbPM9F977zeITEmFA_xvVU6SCxlWWVCi3Dx7ZhFfTp8'
+    );
+
+    const supabaseResumen = window.supabase.createClient(
+      'https://lujroedkbgffobyblbie.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1anJvZWRrYmdmZm9ieWJsYmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxODkzNDgsImV4cCI6MjA3MDc2NTM0OH0.bSbBZeS59aPSEGPj1YGcmZCyQTfgf3fz9pNDuR2ID7c'
+    );
+
+    const HOJA_VIAJE_TABLE = 'hoja_viaje';
+    const HOJA_VIAJE_LIVE_TABLE = 'hoja_viaje_live';
+    const VIAJES_OPERACION_TABLE = 'viajes_operacion';
+    const COSTOS_PROMEDIO_TABLE = 'costos_promedio_por_fecha';
+
+    const EXCLUDED_PRODUCTS = new Set(["Bofe","Higado","Sebo"]);
+
+    const productKeys = [
+      "Bofe","Corazon","Tripa","Cabeza","Cuajo","Libro","Menudo","Pata Sucia","Teleco","Higado","Sebo"
+    ];
+
+    const hojaViajeMap = {
+      "Bofe": "Bofe",
+      "Corazón": "Corazon",
+      "Corazon": "Corazon",
+      "Tripa de res": "Tripa",
+      "Cabeza de res": "Cabeza",
+      "Cuajo de res": "Cuajo",
+      "Libro de res": "Libro",
+      "Menudo sucio": "Menudo",
+      "Pata sucia": "Pata Sucia",
+      "Teleco": "Teleco",
+      "Hígado": "Higado",
+      "Higado": "Higado",
+      "Sebo": "Sebo"
+    };
+
+    const stateDefault = {
+      matriz: [
+        {"concepto":"Materia prima","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Mano de obra","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Luz Granja","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Luz bodega","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Agua","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Gas","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Mantenimiento","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Telcel","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Combustible","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Almuerzos","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Hielo","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Marketing","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Materiales","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":0,"Menudo":0,"Pata Sucia":0,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Escobas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Cuchillos","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Botas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Mandiles","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Cubetas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Faja","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Guantes","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Mantenimiento Refacciones Camioneta","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Servicio","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Articulos Limpieza","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Quimica","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Carretillas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Refacciones maquina de menudo y mante","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Renta inmueble","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"IMSS INFONAVIT","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Impuestos","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Contrato basura","costo":0,"marks":{"Bofe":0,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Paneles solares","costo":0,"marks":{"Bofe":0,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Refrigeradores","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Sierras de carne","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":1,"Cuajo":0,"Libro":0,"Menudo":0,"Pata Sucia":0,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Chevrolet nueva","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Camionta nissan seminueva","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Camioneta nissan blanca 2","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Camioneta nissan blanca","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Camioneta nissan gris","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Camioneta ulises","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Monta cargas","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":1,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Maquina Menudo","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Chevrolet vieja","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Macrobins","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Equipo computo","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Mesas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Patines","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Basculas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Tambos basura","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Despezuñadora","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":0,"Menudo":0,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
+        {"concepto":"Cajas fruteras","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":0,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":0,"Teleco":0,"Higado":1,"Sebo":0}},
+        {"concepto":"bolsas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}}
+      ],
+
+      kgProduccion: [
+        {"producto":"Bofe","kgDia":0,"fuente":"-"},
+        {"producto":"Corazon","kgDia":0,"fuente":"-"},
+        {"producto":"Tripa","kgDia":0,"fuente":"-"},
+        {"producto":"Cabeza","kgDia":0,"fuente":"-"},
+        {"producto":"Cuajo","kgDia":0,"fuente":"-"},
+        {"producto":"Libro","kgDia":0,"fuente":"-"},
+        {"producto":"Menudo","kgDia":0,"fuente":"-"},
+        {"producto":"Pata Sucia","kgDia":0,"fuente":"-"},
+        {"producto":"Teleco","kgDia":0,"fuente":"-"},
+        {"producto":"Higado","kgDia":0,"fuente":"-"},
+        {"producto":"Sebo","kgDia":0,"fuente":"-"}
+      ]
+    };
+
+    let state = loadState();
+
+    const tabs = [
+      {id:"matriz", label:"Matriz"},
+      {id:"kg", label:"Kg Producción"}
+    ];
+
+    let hojaViajeSub = null;
+    let hojaViajeLiveSub = null;
+    let viajesOperacionSub = null;
+    let syncTimer = null;
+    let saveCostoPromedioTimer = null;
+
+    function loadState(){
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if(saved){
+        try{
+          return JSON.parse(saved);
+        }catch(e){}
+      }
+      return structuredClone(stateDefault);
+    }
+
+    function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function todayISO(){
+      const d = new Date();
+      const z = d.getTimezoneOffset() * 60000;
+      return new Date(d - z).toISOString().slice(0,10);
+    }
+
+    function formatMoney(n){
+      return new Intl.NumberFormat('es-MX',{
+        style:'currency',
+        currency:'MXN',
+        maximumFractionDigits:2
+      }).format(Number(n || 0));
+    }
+
+    function formatPlain(n){
+      return new Intl.NumberFormat('es-MX',{
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }).format(Number(n || 0));
+    }
+
+    function setKgSyncStatus(text, ok = true){
+      const el = document.getElementById('kgSyncStatus');
+      if(!el) return;
+      el.textContent = text;
+      el.style.background = ok ? 'rgba(10,122,59,.10)' : 'rgba(185,28,28,.10)';
+      el.style.color = ok ? 'var(--brand)' : 'var(--danger)';
+    }
+
+    function ensureKgRows(){
+      const current = new Map((state.kgProduccion || []).map(r => [r.producto, r]));
+      state.kgProduccion = productKeys.map(p => current.get(p) || { producto:p, kgDia:0, fuente:'-' });
+      forceExcludedProductsToZero();
+    }
+
+    function normalizeLineas(lineas){
+      return Array.isArray(lineas) ? lineas : [];
+    }
+
+    function buildEmptyDayRows(){
+      const obj = {};
+      productKeys.forEach(p => obj[p] = { kgDia:0, fuente:'-' });
+      return obj;
+    }
+
+    function forceExcludedProductsToZero(){
+      if(!Array.isArray(state.kgProduccion)) return;
+      state.kgProduccion = state.kgProduccion.map(row => {
+        if(EXCLUDED_PRODUCTS.has(row.producto)){
+          return { ...row, kgDia:0, fuente:'anulado' };
+        }
+        return row;
+      });
+    }
+
+    function toLocalDateParts(dateStr){
+      const [y, m, d] = String(dateStr).split("-").map(Number);
+      return new Date(y, (m || 1) - 1, d || 1);
+    }
+
+    function formatDateLocal(date){
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function addDays(date, days){
+      const copy = new Date(date);
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+
+    function getApplicableViajeDate(selectedDateStr){
+      const date = toLocalDateParts(selectedDateStr);
+      const day = date.getDay();
+      let viajeDate;
+
+      if(day === 1){
+        viajeDate = addDays(date, -3); // lunes -> viernes
+      } else if(day === 2){
+        viajeDate = addDays(date, -4); // martes -> viernes
+      } else if(day === 3){
+        viajeDate = addDays(date, -1); // miércoles -> martes
+      } else if(day === 4){
+        viajeDate = addDays(date, -2); // jueves -> martes
+      } else if(day === 5){
+        viajeDate = addDays(date, -1); // viernes -> jueves
+      } else if(day === 6){
+        viajeDate = addDays(date, -1); // sábado -> viernes
+      } else {
+        viajeDate = addDays(date, -2); // domingo -> viernes
+      }
+
+      return formatDateLocal(viajeDate);
+    }
+
+    function extractKgFromResultados(resultados){
+      const acumulado = buildEmptyDayRows();
+
+      Object.entries(resultados || {}).forEach(([nombreHoja, lineas]) => {
+        const destino = hojaViajeMap[nombreHoja];
+        if(!destino) return;
+
+        const totalKg = normalizeLineas(lineas).reduce((sum, item) => sum + Number(item?.kg || 0), 0);
+        acumulado[destino].kgDia += totalKg;
+      });
+
+      EXCLUDED_PRODUCTS.forEach(prod => {
+        if(acumulado[prod]){
+          acumulado[prod].kgDia = 0;
+          acumulado[prod].fuente = 'anulado';
+        }
+      });
+
+      return acumulado;
+    }
+
+    function rowsFromAccumulated(acumulado, fuente){
+      return productKeys.map(producto => ({
+        producto,
+        kgDia: EXCLUDED_PRODUCTS.has(producto) ? 0 : Number(acumulado[producto]?.kgDia || 0),
+        fuente: EXCLUDED_PRODUCTS.has(producto) ? 'anulado' : fuente
+      }));
+    }
+
+    async function getMateriaPrimaFromSupabase(){
+      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
+      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+
+      const { data, error } = await supabaseResumen
+        .from(VIAJES_OPERACION_TABLE)
+        .select('kilos, precio_kg, costo_dia')
+        .eq('fecha', fechaViajeAplicable);
+
+      if(error){
+        console.error('Error leyendo viajes_operacion por fecha:', error);
+        return 0;
+      }
+
+      const rows = Array.isArray(data) ? data : [];
+      let totalOperacion = 0;
+
+      rows.forEach(row => {
+        const kilos = Number(row.kilos || 0);
+        const precioKg = Number(row.precio_kg || 0);
+        const costoDia = Number(row.costo_dia || 0);
+        const costoFactura = kilos * precioKg;
+        totalOperacion += (costoFactura + costoDia);
+      });
+
+      return totalOperacion;
+    }
+
+    async function setMateriaPrimaCostForSelectedDate(){
+      const materiaPrima = await getMateriaPrimaFromSupabase();
+      const idx = state.matriz.findIndex(r => String(r.concepto).trim().toLowerCase() === 'materia prima');
+      if(idx >= 0) state.matriz[idx].costo = materiaPrima;
+    }
+
+    async function saveCostoPromedioActual(valor, totalCost, totalKg){
+      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
+      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+
+      const payload = {
+        fecha: fechaSeleccionada,
+        fecha_viaje_aplicable: fechaViajeAplicable,
+        costo_promedio_kg: Number(valor || 0),
+        total_cost: Number(totalCost || 0),
+        total_kg: Number(totalKg || 0)
+      };
+
+      const { error } = await supabaseResumen
+        .from(COSTOS_PROMEDIO_TABLE)
+        .upsert(payload, { onConflict: 'fecha' });
+
+      if(error){
+        console.error('Error guardando costo promedio por fecha:', error);
+      }
+    }
+
+    function scheduleSaveCostoPromedio(valor, totalCost, totalKg){
+      clearTimeout(saveCostoPromedioTimer);
+      saveCostoPromedioTimer = setTimeout(() => {
+        saveCostoPromedioActual(valor, totalCost, totalKg);
+      }, 350);
+    }
+
+    async function syncKgForSelectedDate(showAlert = false){
+      const selectedDate = document.getElementById('kgDate')?.value || todayISO();
+      const fechaViajeAplicable = getApplicableViajeDate(selectedDate);
+
+      setKgSyncStatus(`Sincronizando viaje ${fechaViajeAplicable}...`, true);
+
+      const [savedResp, liveResp] = await Promise.all([
+        supabase
+          .from(HOJA_VIAJE_TABLE)
+          .select('fecha, resultados')
+          .eq('fecha', fechaViajeAplicable)
+          .order('fecha', { ascending: false }),
+
+        supabase
+          .from(HOJA_VIAJE_LIVE_TABLE)
+          .select('id, fecha, data, updated_at')
+          .eq('fecha', fechaViajeAplicable)
+          .order('updated_at', { ascending: false })
+      ]);
+
+      if(savedResp.error){
+        console.error(savedResp.error);
+        setKgSyncStatus('Error hoja_viaje', false);
+        if(showAlert) alert('Error leyendo hoja_viaje: ' + savedResp.error.message);
+        return;
+      }
+
+      if(liveResp.error){
+        console.error(liveResp.error);
+        setKgSyncStatus('Error hoja_viaje_live', false);
+        if(showAlert) alert('Error leyendo hoja_viaje_live: ' + liveResp.error.message);
+        return;
+      }
+
+      ensureKgRows();
+
+      const savedRows = savedResp.data || [];
+      const liveRows = liveResp.data || [];
+
+      if(savedRows.length > 0){
+        const mergedSaved = buildEmptyDayRows();
+
+        savedRows.forEach(row => {
+          const acc = extractKgFromResultados(row.resultados || {});
+          productKeys.forEach(p => {
+            mergedSaved[p].kgDia += Number(acc[p]?.kgDia || 0);
+          });
+        });
+
+        state.kgProduccion = rowsFromAccumulated(mergedSaved, `guardado (${fechaViajeAplicable})`);
+        forceExcludedProductsToZero();
+        await setMateriaPrimaCostForSelectedDate();
+        rerenderAll();
+        setKgSyncStatus(`Viaje aplicado: ${fechaViajeAplicable}`, true);
+
+        if(showAlert){
+          alert(`Kg cargados desde hoja_viaje del viaje aplicable ${fechaViajeAplicable}.`);
+        }
+        return;
+      }
+
+      if(liveRows.length > 0){
+        const latestLive = liveRows[0];
+        const liveResultados = latestLive?.data?.resultados || {};
+        const accLive = extractKgFromResultados(liveResultados);
+
+        state.kgProduccion = rowsFromAccumulated(accLive, `live (${fechaViajeAplicable})`);
+        forceExcludedProductsToZero();
+        await setMateriaPrimaCostForSelectedDate();
+        rerenderAll();
+        setKgSyncStatus(`Live viaje: ${fechaViajeAplicable}`, true);
+
+        if(showAlert){
+          alert(`Kg cargados desde hoja_viaje_live del viaje aplicable ${fechaViajeAplicable}.`);
+        }
+        return;
+      }
+
+      state.kgProduccion = productKeys.map(producto => ({
+        producto,
+        kgDia: 0,
+        fuente: EXCLUDED_PRODUCTS.has(producto) ? 'anulado' : `sin datos (${fechaViajeAplicable})`
+      }));
+
+      forceExcludedProductsToZero();
+      await setMateriaPrimaCostForSelectedDate();
+      rerenderAll();
+      setKgSyncStatus(`Sin datos viaje ${fechaViajeAplicable}`, false);
+
+      if(showAlert){
+        alert(`No hay datos en hoja de viaje para el viaje aplicable ${fechaViajeAplicable}.`);
+      }
+    }
+
+    function scheduleSync(){
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => {
+        syncKgForSelectedDate(false);
+      }, 300);
+    }
+
+    function subscribeHojaViajeRealtime(){
+      if(hojaViajeSub){
+        try { supabase.removeSubscription(hojaViajeSub); } catch(e){}
+        hojaViajeSub = null;
+      }
+
+      hojaViajeSub = supabase
+        .from(HOJA_VIAJE_TABLE)
+        .on('*', () => scheduleSync())
+        .subscribe();
+    }
+
+    function subscribeHojaViajeLiveRealtime(){
+      if(hojaViajeLiveSub){
+        try { supabase.removeSubscription(hojaViajeLiveSub); } catch(e){}
+        hojaViajeLiveSub = null;
+      }
+
+      hojaViajeLiveSub = supabase
+        .from(HOJA_VIAJE_LIVE_TABLE)
+        .on('*', () => scheduleSync())
+        .subscribe();
+    }
+
+    function subscribeViajesOperacionRealtime(){
+      if(viajesOperacionSub){
+        try { supabaseResumen.removeSubscription(viajesOperacionSub); } catch(e){}
+        viajesOperacionSub = null;
+      }
+
+      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
+      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+
+      viajesOperacionSub = supabaseResumen
+        .from(`${VIAJES_OPERACION_TABLE}:fecha=eq.${fechaViajeAplicable}`)
+        .on('*', async () => {
+          await setMateriaPrimaCostForSelectedDate();
+          rerenderAll();
+        })
+        .subscribe();
+    }
+
+    function renderTabs(){
+      const box = document.getElementById('tabs');
+      box.innerHTML = tabs.map((t,i)=>`
+        <button class="tabBtn ${i===0?'active':''}" data-tab-open="${t.id}">${t.label}</button>
+      `).join('');
+
+      box.querySelectorAll('.tabBtn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          document.querySelectorAll('.tabBtn').forEach(x=>x.classList.remove('active'));
+          document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+          btn.classList.add('active');
+          document.querySelector(`.panel[data-tab="${btn.dataset.tabOpen}"]`).classList.add('active');
+        });
+      });
+
+      const firstPanel = document.querySelector(`.panel[data-tab="${tabs[0].id}"]`);
+      if(firstPanel) firstPanel.classList.add('active');
+    }
+
+    function calculateResultados(){
+      const kgMap = {};
+      state.kgProduccion.forEach(r=>{
+        kgMap[r.producto] = EXCLUDED_PRODUCTS.has(r.producto) ? 0 : Number(r.kgDia||0);
+      });
+
+      const out = productKeys.map(p => ({
+        producto:p,
+        costoTotal:0,
+        kg: EXCLUDED_PRODUCTS.has(p) ? 0 : Number(kgMap[p] || 0),
+        costoKg:0
+      }));
+
+      const idx = Object.fromEntries(out.map((r,i)=>[r.producto,i]));
+
+      state.matriz.forEach(row=>{
+        const cost = Number(row.costo || 0);
+        const activeProducts = productKeys.filter(p => row.marks && row.marks[p]);
+        const divisor = activeProducts.length;
+
+        if(cost > 0 && divisor > 0){
+          const share = cost / divisor;
+          activeProducts.forEach(p => {
+            out[idx[p]].costoTotal += share;
+          });
+        }
+      });
+
+      out.forEach(r => {
+        r.costoKg = r.kg > 0 ? r.costoTotal / r.kg : 0;
+      });
+
+      return out;
+    }
+
+    function updateKPIs(){
+      const resultados = calculateResultados();
+      const totalCost = state.matriz.reduce((a,b)=>a + Number(b.costo||0),0);
+      const totalKg = resultados.reduce((a,b)=>a + Number(b.kg||0),0);
+      const activeProducts = resultados.filter(x=>x.kg>0).length;
+      const avg = totalKg > 0 ? totalCost / totalKg : 0;
+
+      document.getElementById('kpiTotalCost').textContent = formatMoney(totalCost);
+      document.getElementById('kpiKg').textContent = formatPlain(totalKg);
+      document.getElementById('kpiProducts').textContent = activeProducts;
+      document.getElementById('kpiAvg').textContent = formatMoney(avg);
+
+      scheduleSaveCostoPromedio(avg, totalCost, totalKg);
+    }
+
+    function renderNewCostChecks(){
+      const box = document.getElementById('newCostChecks');
+      box.innerHTML = productKeys.map(p=>`
+        <label class="checkItem">
+          <input type="checkbox" data-new-product="${p}" checked />
+          <span>${p}</span>
+        </label>
+      `).join('');
+    }
+
+    function renderMatriz(){
+      const q = (document.getElementById('searchMatriz')?.value || '').trim().toLowerCase();
+      const data = state.matriz.filter(r => !q || r.concepto.toLowerCase().includes(q));
+      const tbl = document.getElementById('tblMatriz');
+
+      tbl.innerHTML = `
+        <thead>
+          <tr>
+            <th class="stickyCol">Concepto</th>
+            <th>Costo</th>
+            ${productKeys.map(p=>`<th>${p}</th>`).join('')}
+            <th># Activos</th>
+            <th>Reparto</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map((row)=>{
+            const realIndex = state.matriz.indexOf(row);
+            const activeCount = productKeys.filter(p => row.marks[p]).length;
+            const share = activeCount > 0 ? Number(row.costo||0) / activeCount : 0;
+            const isMateriaPrima = String(row.concepto).trim().toLowerCase() === 'materia prima';
+
+            return `
+              <tr>
+                <td class="stickyCol"><b>${row.concepto}</b></td>
+                <td class="num">
+                  ${
+                    isMateriaPrima
+                    ? `<input class="inputNum autoCell" type="text" value="${formatMoney(Number(row.costo||0))}" readonly />`
+                    : `<input class="inputNum" type="number" step="0.01" value="${Number(row.costo||0)}"
+                        onchange="updateCosto(${realIndex}, this.value)" />`
+                  }
+                </td>
+                ${productKeys.map(p=>`
+                  <td class="checkCell">
+                    <input type="checkbox" ${row.marks[p] ? 'checked' : ''} onchange="toggleMark(${realIndex}, '${p}', this.checked)" />
+                  </td>
+                `).join('')}
+                <td class="center"><b>${activeCount}</b></td>
+                <td class="num">${activeCount ? formatMoney(share) : '<span class="muted">Sin reparto</span>'}</td>
+                <td class="center">
+                  ${isMateriaPrima ? '<span class="muted"><b>Auto</b></span>' : `<button class="btn danger" style="padding:8px 10px;" onclick="deleteCosto(${realIndex})">Eliminar</button>`}
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      `;
+    }
+
+    function renderKg(){
+      const tbl = document.getElementById('tblKg');
+      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
+      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+
+      tbl.innerHTML = `
+        <thead>
+          <tr>
+            <th class="stickyCol">Producto</th>
+            <th>Kg/día</th>
+            <th>Fuente</th>
+            <th>Fecha visual</th>
+            <th>Viaje aplicado</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${state.kgProduccion.map((row)=>`
+            <tr>
+              <td class="stickyCol"><b>${row.producto}</b></td>
+              <td class="num"><b>${formatPlain(EXCLUDED_PRODUCTS.has(row.producto) ? 0 : (row.kgDia || 0))}</b></td>
+              <td class="center">${EXCLUDED_PRODUCTS.has(row.producto) ? 'anulado' : (row.fuente || '-')}</td>
+              <td class="center">${fechaSeleccionada}</td>
+              <td class="center">${fechaViajeAplicable}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+    }
+
+    function rerenderAll(){
+      forceExcludedProductsToZero();
+      updateKPIs();
+      renderMatriz();
+      renderKg();
+      saveState();
+    }
+
+    window.updateCosto = function(index, value){
+      const concepto = String(state.matriz[index]?.concepto || '').trim().toLowerCase();
+      if(concepto === 'materia prima') return;
+      state.matriz[index].costo = Number(value || 0);
+      rerenderAll();
+    };
+
+    window.toggleMark = function(index, product, checked){
+      state.matriz[index].marks[product] = checked ? 1 : 0;
+      rerenderAll();
+    };
+
+    window.deleteCosto = function(index){
+      const item = state.matriz[index];
+      if(!item) return;
+      if(String(item.concepto).trim().toLowerCase() === 'materia prima'){
+        alert('Materia prima es automática y no se puede eliminar.');
+        return;
+      }
+      const ok = confirm(`¿Eliminar el costo "${item.concepto}"?`);
+      if(!ok) return;
+      state.matriz.splice(index, 1);
+      rerenderAll();
+    };
+
+    function addNewCosto(){
+      const concepto = document.getElementById('newConcepto').value.trim();
+      const costo = Number(document.getElementById('newCosto').value || 0);
+
+      if(!concepto){
+        alert('Escribe el nombre del concepto.');
+        return;
+      }
+
+      if(concepto.toLowerCase() === 'materia prima'){
+        alert('Materia prima ya existe y se llena automáticamente.');
+        return;
+      }
+
+      const marks = {};
+      let activos = 0;
+
+      document.querySelectorAll('[data-new-product]').forEach(ch => {
+        const checked = ch.checked ? 1 : 0;
+        marks[ch.dataset.newProduct] = checked;
+        activos += checked;
+      });
+
+      if(activos === 0){
+        alert('Marca al menos un producto al que le aplique este costo.');
+        return;
+      }
+
+      state.matriz.push({ concepto, costo, marks });
+
+      document.getElementById('newConcepto').value = '';
+      document.getElementById('newCosto').value = '';
+      document.querySelectorAll('[data-new-product]').forEach(ch => ch.checked = true);
+
+      rerenderAll();
+    }
+
+    document.getElementById('btnAgregarCosto').addEventListener('click', addNewCosto);
+
+    document.getElementById('btnMarcarTodos').addEventListener('click', ()=>{
+      document.querySelectorAll('[data-new-product]').forEach(ch => ch.checked = true);
+    });
+
+    document.getElementById('btnLimpiarTodos').addEventListener('click', ()=>{
+      document.querySelectorAll('[data-new-product]').forEach(ch => ch.checked = false);
+    });
+
+    document.getElementById('btnGuardar').addEventListener('click', ()=>{
+      saveState();
+      alert('Datos guardados en este navegador.');
+    });
+
+    document.getElementById('btnExportJson').addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'costos-vdc360-data.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('btnReset').addEventListener('click', async ()=>{
+      if(!confirm('¿Seguro que quieres restablecer los datos originales del archivo nuevo?')) return;
+      state = structuredClone(stateDefault);
+      localStorage.removeItem(STORAGE_KEY);
+      forceExcludedProductsToZero();
+      await setMateriaPrimaCostForSelectedDate();
+      rerenderAll();
+      await syncKgForSelectedDate(false);
+      subscribeViajesOperacionRealtime();
+    });
+
+    document.getElementById('searchMatriz').addEventListener('input', renderMatriz);
+
+    document.getElementById('btnSyncKg').addEventListener('click', ()=>{
+      syncKgForSelectedDate(true);
+    });
+
+    document.getElementById('kgDate').addEventListener('change', async ()=>{
+      await syncKgForSelectedDate(false);
+      subscribeViajesOperacionRealtime();
+    });
+
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const dateInput = document.getElementById('kgDate');
+      if(dateInput) dateInput.value = todayISO();
+
+      renderTabs();
+      renderNewCostChecks();
+      forceExcludedProductsToZero();
+      await setMateriaPrimaCostForSelectedDate();
+      rerenderAll();
+
+      await syncKgForSelectedDate(false);
+      subscribeHojaViajeRealtime();
+      subscribeHojaViajeLiveRealtime();
+      subscribeViajesOperacionRealtime();
+    });
+  </script>
+</body>
+</html>
