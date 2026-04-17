@@ -453,7 +453,7 @@
         <span class="chip">Kg desde Hoja de Viaje</span>
         <span class="chip">Materia prima por fecha</span>
         <span class="chip">Promedio por fecha visualizada</span>
-        <span class="chip">Hígado, Bofe y Sebo anulados</span>
+        <span class="chip">Todos los productos cuentan</span>
       </div>
 
       <div class="topActions">
@@ -470,7 +470,7 @@
       <article class="kpi">
         <div class="t">Kg totales del día</div>
         <div class="v" id="kpiKg">0</div>
-        <div class="s">Sin considerar Hígado, Bofe y Sebo</div>
+        <div class="s">Incluye todos los productos del viaje</div>
       </article>
       <article class="kpi">
         <div class="t">Productos activos del día</div>
@@ -549,7 +549,7 @@
         <table id="tblKg"></table>
       </div>
       <div class="footerNote">
-        Aunque Hoja de Viaje envíe datos de <b>Hígado</b>, <b>Bofe</b> o <b>Sebo</b>, aquí siempre se tomarán como <b>0</b>.
+        Aquí se toman los kilos reales de <b>todos los productos del viaje</b>, incluyendo <b>Hígado</b>, <b>Bofe</b> y <b>Sebo</b>.
       </div>
     </section>
 
@@ -598,7 +598,7 @@
     const VIAJES_OPERACION_TABLE = 'viajes_operacion';
     const COSTOS_PROMEDIO_TABLE = 'costos_promedio_por_fecha';
 
-    const EXCLUDED_PRODUCTS = new Set(["Bofe","Higado","Sebo"]);
+    const EXCLUDED_PRODUCTS = new Set();
 
     const productKeys = [
       "Bofe","Corazon","Tripa","Cabeza","Cuajo","Libro","Menudo","Pata Sucia","Teleco","Higado","Sebo"
@@ -622,57 +622,57 @@
 
     const stateDefault = {
       matriz: [
-        {"concepto":"Materia prima","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Mano de obra","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Materia prima","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Mano de obra","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
         {"concepto":"Luz Granja","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
-        {"concepto":"Luz bodega","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Agua","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Luz bodega","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Agua","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
         {"concepto":"Gas","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
-        {"concepto":"Mantenimiento","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Telcel","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Combustible","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Almuerzos","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Hielo","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Marketing","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Mantenimiento","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Telcel","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Combustible","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Almuerzos","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Hielo","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Marketing","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
         {"concepto":"Materiales","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":0,"Menudo":0,"Pata Sucia":0,"Teleco":0,"Higado":0,"Sebo":0}},
-        {"concepto":"Escobas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Cuchillos","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Botas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Mandiles","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Cubetas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Faja","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Guantes","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Mantenimiento Refacciones Camioneta","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Servicio","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Articulos Limpieza","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Escobas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Cuchillos","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Botas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Mandiles","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Cubetas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Faja","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Guantes","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Mantenimiento Refacciones Camioneta","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Servicio","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Articulos Limpieza","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
         {"concepto":"Quimica","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
-        {"concepto":"Carretillas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Carretillas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
         {"concepto":"Refacciones maquina de menudo y mante","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
-        {"concepto":"Renta inmueble","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"IMSS INFONAVIT","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Impuestos","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Contrato basura","costo":0,"marks":{"Bofe":0,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Paneles solares","costo":0,"marks":{"Bofe":0,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Refrigeradores","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Renta inmueble","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"IMSS INFONAVIT","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Impuestos","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Contrato basura","costo":0,"marks":{"Bofe":0,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Paneles solares","costo":0,"marks":{"Bofe":0,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Refrigeradores","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
         {"concepto":"Sierras de carne","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":1,"Cuajo":0,"Libro":0,"Menudo":0,"Pata Sucia":0,"Teleco":0,"Higado":0,"Sebo":0}},
-        {"concepto":"Chevrolet nueva","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Camionta nissan seminueva","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Camioneta nissan blanca 2","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Camioneta nissan blanca","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Camioneta nissan gris","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Camioneta ulises","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Chevrolet nueva","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Camionta nissan seminueva","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Camioneta nissan blanca 2","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Camioneta nissan blanca","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Camioneta nissan gris","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Camioneta ulises","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
         {"concepto":"Monta cargas","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":1,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
         {"concepto":"Maquina Menudo","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
-        {"concepto":"Chevrolet vieja","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Macrobins","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Equipo computo","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Mesas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Patines","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Basculas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
-        {"concepto":"Tambos basura","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}},
+        {"concepto":"Chevrolet vieja","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Macrobins","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Equipo computo","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Mesas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Patines","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Basculas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
+        {"concepto":"Tambos basura","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}},
         {"concepto":"Despezuñadora","costo":0,"marks":{"Bofe":0,"Corazon":0,"Tripa":0,"Cabeza":0,"Cuajo":0,"Libro":0,"Menudo":0,"Pata Sucia":1,"Teleco":0,"Higado":0,"Sebo":0}},
         {"concepto":"Cajas fruteras","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":0,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":0,"Teleco":0,"Higado":1,"Sebo":0}},
-        {"concepto":"bolsas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":0}}
+        {"concepto":"bolsas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}}
       ],
 
       kgProduccion: [
@@ -770,7 +770,6 @@
     function ensureKgRows(){
       const current = new Map((state.kgProduccion || []).map(r => [r.producto, r]));
       state.kgProduccion = productKeys.map(p => current.get(p) || { producto:p, kgDia:0, fuente:'-' });
-      forceExcludedProductsToZero();
     }
 
     function normalizeLineas(lineas){
@@ -784,13 +783,7 @@
     }
 
     function forceExcludedProductsToZero(){
-      if(!Array.isArray(state.kgProduccion)) return;
-      state.kgProduccion = state.kgProduccion.map(row => {
-        if(EXCLUDED_PRODUCTS.has(row.producto)){
-          return { ...row, kgDia:0, fuente:'anulado' };
-        }
-        return row;
-      });
+      return;
     }
 
     function toLocalDateParts(dateStr){
@@ -846,21 +839,14 @@
         acumulado[destino].kgDia += totalKg;
       });
 
-      EXCLUDED_PRODUCTS.forEach(prod => {
-        if(acumulado[prod]){
-          acumulado[prod].kgDia = 0;
-          acumulado[prod].fuente = 'anulado';
-        }
-      });
-
       return acumulado;
     }
 
     function rowsFromAccumulated(acumulado, fuente){
       return productKeys.map(producto => ({
         producto,
-        kgDia: EXCLUDED_PRODUCTS.has(producto) ? 0 : Number(acumulado[producto]?.kgDia || 0),
-        fuente: EXCLUDED_PRODUCTS.has(producto) ? 'anulado' : fuente
+        kgDia: Number(acumulado[producto]?.kgDia || 0),
+        fuente
       }));
     }
 
@@ -976,7 +962,6 @@
         });
 
         state.kgProduccion = rowsFromAccumulated(mergedSaved, `guardado (${fechaViajeAplicable})`);
-        forceExcludedProductsToZero();
         await setMateriaPrimaCostForSelectedDate();
         rerenderAll();
         setKgSyncStatus(`Viaje aplicado: ${fechaViajeAplicable}`, true);
@@ -993,7 +978,6 @@
         const accLive = extractKgFromResultados(liveResultados);
 
         state.kgProduccion = rowsFromAccumulated(accLive, `live (${fechaViajeAplicable})`);
-        forceExcludedProductsToZero();
         await setMateriaPrimaCostForSelectedDate();
         rerenderAll();
         setKgSyncStatus(`Live viaje: ${fechaViajeAplicable}`, true);
@@ -1007,10 +991,9 @@
       state.kgProduccion = productKeys.map(producto => ({
         producto,
         kgDia: 0,
-        fuente: EXCLUDED_PRODUCTS.has(producto) ? 'anulado' : `sin datos (${fechaViajeAplicable})`
+        fuente: `sin datos (${fechaViajeAplicable})`
       }));
 
-      forceExcludedProductsToZero();
       await setMateriaPrimaCostForSelectedDate();
       rerenderAll();
       setKgSyncStatus(`Sin datos viaje ${fechaViajeAplicable}`, false);
@@ -1091,13 +1074,13 @@
     function calculateResultados(){
       const kgMap = {};
       state.kgProduccion.forEach(r=>{
-        kgMap[r.producto] = EXCLUDED_PRODUCTS.has(r.producto) ? 0 : Number(r.kgDia||0);
+        kgMap[r.producto] = Number(r.kgDia||0);
       });
 
       const out = productKeys.map(p => ({
         producto:p,
         costoTotal:0,
-        kg: EXCLUDED_PRODUCTS.has(p) ? 0 : Number(kgMap[p] || 0),
+        kg: Number(kgMap[p] || 0),
         costoKg:0
       }));
 
@@ -1218,8 +1201,8 @@
           ${state.kgProduccion.map((row)=>`
             <tr>
               <td class="stickyCol"><b>${row.producto}</b></td>
-              <td class="num"><b>${formatPlain(EXCLUDED_PRODUCTS.has(row.producto) ? 0 : (row.kgDia || 0))}</b></td>
-              <td class="center">${EXCLUDED_PRODUCTS.has(row.producto) ? 'anulado' : (row.fuente || '-')}</td>
+              <td class="num"><b>${formatPlain(row.kgDia || 0)}</b></td>
+              <td class="center">${row.fuente || '-'}</td>
               <td class="center">${fechaSeleccionada}</td>
               <td class="center">${fechaViajeAplicable}</td>
             </tr>
@@ -1347,7 +1330,6 @@
     }
 
     function rerenderAll(){
-      forceExcludedProductsToZero();
       updateKPIs();
       renderMatriz();
       renderKg();
@@ -1451,7 +1433,6 @@
       if(!confirm('¿Seguro que quieres restablecer los datos originales del archivo nuevo?')) return;
       state = structuredClone(stateDefault);
       localStorage.removeItem(STORAGE_KEY);
-      forceExcludedProductsToZero();
       await setMateriaPrimaCostForSelectedDate();
       rerenderAll();
       await syncKgForSelectedDate(false);
@@ -1475,7 +1456,6 @@
 
       renderTabs();
       renderNewCostChecks();
-      forceExcludedProductsToZero();
       await setMateriaPrimaCostForSelectedDate();
       rerenderAll();
 
