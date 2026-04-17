@@ -566,6 +566,7 @@
           <span class="badge" id="pctTotalBadge">Total %: 0</span>
           <span class="badge" id="pctBaseBadge">Base: $0</span>
           <span class="badge" id="pctValorBadge">Valorizado: $0</span>
+          <span class="badge" id="pctSaveStatus">Sin guardar</span>
         </div>
       </div>
 
@@ -597,6 +598,7 @@
     const HOJA_VIAJE_LIVE_TABLE = 'hoja_viaje_live';
     const VIAJES_OPERACION_TABLE = 'viajes_operacion';
     const COSTOS_PROMEDIO_TABLE = 'costos_promedio_por_fecha';
+    const COSTOS_FINALES_TABLE = 'costos_finales_por_producto';
 
     const EXCLUDED_PRODUCTS = new Set();
 
@@ -717,17 +719,16 @@
     let viajesOperacionSub = null;
     let syncTimer = null;
     let saveCostoPromedioTimer = null;
+    let saveCostosFinalesTimer = null;
 
     function loadState(){
       const saved = localStorage.getItem(STORAGE_KEY);
       if(saved){
         try{
           const parsed = JSON.parse(saved);
-
           if(!parsed.matriz) parsed.matriz = structuredClone(stateDefault.matriz);
           if(!parsed.kgProduccion) parsed.kgProduccion = structuredClone(stateDefault.kgProduccion);
           if(!parsed.valorPct) parsed.valorPct = structuredClone(stateDefault.valorPct);
-
           return parsed;
         }catch(e){}
       }
@@ -767,6 +768,14 @@
       el.style.color = ok ? 'var(--brand)' : 'var(--danger)';
     }
 
+    function setPctSaveStatus(text, ok = true){
+      const el = document.getElementById('pctSaveStatus');
+      if(!el) return;
+      el.textContent = text;
+      el.style.background = ok ? 'rgba(10,122,59,.10)' : 'rgba(185,28,28,.10)';
+      el.style.color = ok ? 'var(--brand)' : 'var(--danger)';
+    }
+
     function ensureKgRows(){
       const current = new Map((state.kgProduccion || []).map(r => [r.producto, r]));
       state.kgProduccion = productKeys.map(p => current.get(p) || { producto:p, kgDia:0, fuente:'-' });
@@ -780,10 +789,6 @@
       const obj = {};
       productKeys.forEach(p => obj[p] = { kgDia:0, fuente:'-' });
       return obj;
-    }
-
-    function forceExcludedProductsToZero(){
-      return;
     }
 
     function toLocalDateParts(dateStr){
@@ -1262,6 +1267,49 @@
       };
     }
 
+    async function saveCostosFinalesPorProducto(){
+      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
+      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+      const calc = calculateValorPct();
+
+      const payload = calc.rows.map(row => ({
+        fecha: fechaSeleccionada,
+        fecha_viaje_aplicable: fechaViajeAplicable,
+        producto: row.producto,
+        porcentaje: Number(row.porcentaje || 0),
+        kg: Number(row.kg || 0),
+        valor_asignado: Number(row.valorAsignado || 0),
+        precio_base: Number(row.precioBase || 0),
+        costo_operativo: Number(row.costoOp || 0),
+        costo_final: Number(row.costoFinal || 0),
+        materia_prima_total: Number(calc.totalBase || 0),
+        updated_at: new Date().toISOString()
+      }));
+
+      if(!payload.length) return;
+
+      setPctSaveStatus('Guardando...', true);
+
+      const { error } = await supabaseResumen
+        .from(COSTOS_FINALES_TABLE)
+        .upsert(payload, { onConflict: 'fecha,producto' });
+
+      if(error){
+        console.error('Error guardando costos finales por producto:', error);
+        setPctSaveStatus('Error al guardar', false);
+        return;
+      }
+
+      setPctSaveStatus('Guardado en Supabase', true);
+    }
+
+    function scheduleSaveCostosFinales(){
+      clearTimeout(saveCostosFinalesTimer);
+      saveCostosFinalesTimer = setTimeout(() => {
+        saveCostosFinalesPorProducto();
+      }, 500);
+    }
+
     function renderValorPct(){
       const tbl = document.getElementById('tblValorPct');
       if(!tbl) return;
@@ -1335,6 +1383,7 @@
       renderKg();
       renderValorPct();
       saveState();
+      scheduleSaveCostosFinales();
     }
 
     window.updateCosto = function(index, value){
