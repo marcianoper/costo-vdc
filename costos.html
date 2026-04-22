@@ -21,6 +21,7 @@
       --danger:#b91c1c;
       --ok:#0a7a3b;
       --radius:18px;
+      --info:#0ea5e9;
     }
 
     *{box-sizing:border-box}
@@ -437,6 +438,83 @@
       color:#0f172a;
       font-weight:1000;
     }
+
+    .weekStrip{
+      padding:0 18px 16px;
+      display:grid;
+      gap:12px;
+    }
+
+    .weekHeader{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .weekHeaderLeft{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+
+    .weekDates{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .weekDateBtn{
+      border:none;
+      cursor:pointer;
+      padding:12px 14px;
+      border-radius:16px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow2);
+      min-width:170px;
+      text-align:left;
+      transition:.16s ease;
+    }
+
+    .weekDateBtn:hover{
+      transform:translateY(-1px);
+    }
+
+    .weekDateBtn.active{
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      border-color:transparent;
+    }
+
+    .weekDateBtn.noData{
+      background:#fff7ed;
+      border-color:#fed7aa;
+    }
+
+    .weekDateBtn .d1{
+      display:block;
+      font-size:12px;
+      font-weight:1000;
+      opacity:.85;
+    }
+
+    .weekDateBtn .d2{
+      display:block;
+      margin-top:4px;
+      font-size:15px;
+      font-weight:1000;
+    }
+
+    .weekDateBtn .d3{
+      display:block;
+      margin-top:6px;
+      font-size:11px;
+      font-weight:900;
+      opacity:.85;
+    }
   </style>
 </head>
 <body>
@@ -570,6 +648,21 @@
         </div>
       </div>
 
+      <div class="weekStrip">
+        <div class="weekHeader">
+          <div class="weekHeaderLeft">
+            <label style="display:flex;align-items:center;gap:8px;font-weight:1000;">
+              Semana base:
+              <input type="date" id="weekBaseDate" class="dateInput">
+            </label>
+            <button class="btn ghost" id="btnLoadWeek">Ver semana</button>
+          </div>
+          <div class="badge" id="weekInfoBadge">Semana actual</div>
+        </div>
+
+        <div id="weekTravelDates" class="weekDates"></div>
+      </div>
+
       <div class="tableWrap">
         <table id="tblValorPct"></table>
       </div>
@@ -582,7 +675,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "vdc_costos_html_v8_promedio_por_fecha";
+    const STORAGE_KEY = "vdc_costos_html_v9_semana_viajes";
 
     const supabase = window.supabase.createClient(
       'https://rcegikeiaxptolrduguc.supabase.co',
@@ -721,6 +814,9 @@
     let saveCostoPromedioTimer = null;
     let saveCostosFinalesTimer = null;
 
+    let selectedViajeDateOverride = null;
+    let weekTravelButtons = [];
+
     function loadState(){
       const saved = localStorage.getItem(STORAGE_KEY);
       if(saved){
@@ -809,6 +905,15 @@
       return copy;
     }
 
+    function getDayShortName(dateStr){
+      const d = toLocalDateParts(dateStr);
+      return ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][d.getDay()];
+    }
+
+    function getCurrentSelectedDate(){
+      return document.getElementById('kgDate')?.value || todayISO();
+    }
+
     function getApplicableViajeDate(selectedDateStr){
       const date = toLocalDateParts(selectedDateStr);
       const day = date.getDay();
@@ -831,6 +936,100 @@
       }
 
       return formatDateLocal(viajeDate);
+    }
+
+    function getCurrentViajeDate(){
+      return selectedViajeDateOverride || getApplicableViajeDate(getCurrentSelectedDate());
+    }
+
+    function getStartOfWeek(dateStr){
+      const base = toLocalDateParts(dateStr);
+      const day = base.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      return addDays(base, diff);
+    }
+
+    function getWeekRange(dateStr){
+      const start = getStartOfWeek(dateStr);
+      const end = addDays(start, 6);
+      return {
+        startDate: start,
+        endDate: end,
+        start: formatDateLocal(start),
+        end: formatDateLocal(end)
+      };
+    }
+
+    function getScheduledTravelDatesInWeek(baseDateStr){
+      const weekStart = getStartOfWeek(baseDateStr);
+      return [
+        formatDateLocal(addDays(weekStart, 1)), // martes
+        formatDateLocal(addDays(weekStart, 3)), // jueves
+        formatDateLocal(addDays(weekStart, 4))  // viernes
+      ];
+    }
+
+    async function loadWeekTravelDates(baseDateStr){
+      const refDate = baseDateStr || getCurrentSelectedDate();
+      const { start, end } = getWeekRange(refDate);
+
+      const { data, error } = await supabaseResumen
+        .from(VIAJES_OPERACION_TABLE)
+        .select('fecha')
+        .gte('fecha', start)
+        .lte('fecha', end)
+        .order('fecha', { ascending: true });
+
+      const foundSet = new Set((data || []).map(r => r.fecha));
+      const scheduled = getScheduledTravelDatesInWeek(refDate);
+
+      weekTravelButtons = scheduled.map(fecha => ({
+        fecha,
+        hasData: foundSet.has(fecha)
+      }));
+
+      renderWeekTravelDates();
+    }
+
+    function renderWeekTravelDates(){
+      const box = document.getElementById('weekTravelDates');
+      const badge = document.getElementById('weekInfoBadge');
+      if(!box) return;
+
+      const baseDate = document.getElementById('weekBaseDate')?.value || getCurrentSelectedDate();
+      const { start, end } = getWeekRange(baseDate);
+
+      if(badge){
+        badge.textContent = `Semana: ${start} a ${end}`;
+      }
+
+      box.innerHTML = weekTravelButtons.map(item => {
+        const active = getCurrentViajeDate() === item.fecha;
+        return `
+          <button
+            class="weekDateBtn ${active ? 'active' : ''} ${item.hasData ? '' : 'noData'}"
+            data-viaje-date="${item.fecha}"
+          >
+            <span class="d1">${getDayShortName(item.fecha)}</span>
+            <span class="d2">${item.fecha}</span>
+            <span class="d3">${item.hasData ? 'Con viaje' : 'Sin datos'}</span>
+          </button>
+        `;
+      }).join('');
+
+      box.querySelectorAll('[data-viaje-date]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const viajeDate = btn.dataset.viajeDate;
+          selectedViajeDateOverride = viajeDate;
+
+          const kgDate = document.getElementById('kgDate');
+          if(kgDate) kgDate.value = viajeDate;
+
+          await syncKgForSelectedDate(false, true);
+          subscribeViajesOperacionRealtime();
+          renderWeekTravelDates();
+        });
+      });
     }
 
     function extractKgFromResultados(resultados){
@@ -856,8 +1055,8 @@
     }
 
     async function getMateriaPrimaFromSupabase(){
-      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+      const fechaSeleccionada = getCurrentSelectedDate();
+      const fechaViajeAplicable = getCurrentViajeDate();
 
       const { data, error } = await supabaseResumen
         .from(VIAJES_OPERACION_TABLE)
@@ -890,8 +1089,8 @@
     }
 
     async function saveCostoPromedioActual(valor, totalCost, totalKg){
-      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+      const fechaSeleccionada = getCurrentSelectedDate();
+      const fechaViajeAplicable = getCurrentViajeDate();
 
       const payload = {
         fecha: fechaSeleccionada,
@@ -917,9 +1116,9 @@
       }, 350);
     }
 
-    async function syncKgForSelectedDate(showAlert = false){
-      const selectedDate = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(selectedDate);
+    async function syncKgForSelectedDate(showAlert = false, usingDirectTravelDate = false){
+      const selectedDate = getCurrentSelectedDate();
+      const fechaViajeAplicable = getCurrentViajeDate();
 
       setKgSyncStatus(`Sincronizando viaje ${fechaViajeAplicable}...`, true);
 
@@ -972,7 +1171,7 @@
         setKgSyncStatus(`Viaje aplicado: ${fechaViajeAplicable}`, true);
 
         if(showAlert){
-          alert(`Kg cargados desde hoja_viaje del viaje aplicable ${fechaViajeAplicable}.`);
+          alert(`Kg cargados desde hoja_viaje del viaje ${fechaViajeAplicable}.`);
         }
         return;
       }
@@ -988,7 +1187,7 @@
         setKgSyncStatus(`Live viaje: ${fechaViajeAplicable}`, true);
 
         if(showAlert){
-          alert(`Kg cargados desde hoja_viaje_live del viaje aplicable ${fechaViajeAplicable}.`);
+          alert(`Kg cargados desde hoja_viaje_live del viaje ${fechaViajeAplicable}.`);
         }
         return;
       }
@@ -1004,7 +1203,7 @@
       setKgSyncStatus(`Sin datos viaje ${fechaViajeAplicable}`, false);
 
       if(showAlert){
-        alert(`No hay datos en hoja de viaje para el viaje aplicable ${fechaViajeAplicable}.`);
+        alert(`No hay datos en hoja de viaje para ${fechaViajeAplicable}.`);
       }
     }
 
@@ -1045,8 +1244,7 @@
         viajesOperacionSub = null;
       }
 
-      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+      const fechaViajeAplicable = getCurrentViajeDate();
 
       viajesOperacionSub = supabaseResumen
         .from(`${VIAJES_OPERACION_TABLE}:fecha=eq.${fechaViajeAplicable}`)
@@ -1189,8 +1387,8 @@
 
     function renderKg(){
       const tbl = document.getElementById('tblKg');
-      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+      const fechaSeleccionada = getCurrentSelectedDate();
+      const fechaViajeAplicable = getCurrentViajeDate();
 
       tbl.innerHTML = `
         <thead>
@@ -1268,8 +1466,8 @@
     }
 
     async function saveCostosFinalesPorProducto(){
-      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+      const fechaSeleccionada = getCurrentSelectedDate();
+      const fechaViajeAplicable = getCurrentViajeDate();
       const calc = calculateValorPct();
 
       const payload = calc.rows.map(row => ({
@@ -1382,6 +1580,7 @@
       renderMatriz();
       renderKg();
       renderValorPct();
+      renderWeekTravelDates();
       saveState();
       scheduleSaveCostosFinales();
     }
@@ -1482,9 +1681,11 @@
       if(!confirm('¿Seguro que quieres restablecer los datos originales del archivo nuevo?')) return;
       state = structuredClone(stateDefault);
       localStorage.removeItem(STORAGE_KEY);
+      selectedViajeDateOverride = null;
       await setMateriaPrimaCostForSelectedDate();
       rerenderAll();
       await syncKgForSelectedDate(false);
+      await loadWeekTravelDates(document.getElementById('weekBaseDate')?.value || todayISO());
       subscribeViajesOperacionRealtime();
     });
 
@@ -1495,13 +1696,26 @@
     });
 
     document.getElementById('kgDate').addEventListener('change', async ()=>{
+      selectedViajeDateOverride = null;
+      const value = document.getElementById('kgDate').value || todayISO();
+      const weekBaseDate = document.getElementById('weekBaseDate');
+      if(weekBaseDate) weekBaseDate.value = value;
       await syncKgForSelectedDate(false);
+      await loadWeekTravelDates(value);
       subscribeViajesOperacionRealtime();
+    });
+
+    document.getElementById('btnLoadWeek').addEventListener('click', async ()=>{
+      const base = document.getElementById('weekBaseDate')?.value || todayISO();
+      await loadWeekTravelDates(base);
     });
 
     document.addEventListener('DOMContentLoaded', async ()=>{
       const dateInput = document.getElementById('kgDate');
       if(dateInput) dateInput.value = todayISO();
+
+      const weekBaseDate = document.getElementById('weekBaseDate');
+      if(weekBaseDate) weekBaseDate.value = todayISO();
 
       renderTabs();
       renderNewCostChecks();
@@ -1509,6 +1723,8 @@
       rerenderAll();
 
       await syncKgForSelectedDate(false);
+      await loadWeekTravelDates(todayISO());
+
       subscribeHojaViajeRealtime();
       subscribeHojaViajeLiveRealtime();
       subscribeViajesOperacionRealtime();
