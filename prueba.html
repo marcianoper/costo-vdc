@@ -21,8 +21,7 @@
       --danger:#b91c1c;
       --ok:#0a7a3b;
       --radius:18px;
-      --warn:#b45309;
-      --info:#0369a1;
+      --info:#0ea5e9;
     }
 
     *{box-sizing:border-box}
@@ -244,10 +243,6 @@
       background:linear-gradient(135deg,#dc2626,#991b1b);
       box-shadow:0 10px 20px rgba(185,28,28,.18);
     }
-    .btn.warn{
-      background:linear-gradient(135deg,#d97706,#b45309);
-      box-shadow:0 10px 20px rgba(180,83,9,.18);
-    }
 
     .searchRow{
       padding:0 18px 16px;
@@ -388,8 +383,6 @@
     .center{text-align:center}
     .muted{color:var(--muted)}
     .resultGood{color:var(--ok);font-weight:1000}
-    .resultWarn{color:var(--warn);font-weight:1000}
-    .resultInfo{color:var(--info);font-weight:1000}
 
     .inputNum{
       width:120px;
@@ -446,40 +439,81 @@
       font-weight:1000;
     }
 
-    .manualBar{
-      margin:0 18px 14px;
-      padding:14px;
-      border-radius:18px;
-      background:#f8fafc;
-      border:1px solid var(--line);
+    .weekStrip{
+      padding:0 18px 16px;
+      display:grid;
+      gap:12px;
+    }
+
+    .weekHeader{
       display:flex;
-      gap:10px;
       flex-wrap:wrap;
+      gap:10px;
       align-items:center;
       justify-content:space-between;
     }
-    .manualBar .left,
-    .manualBar .right{
+
+    .weekHeaderLeft{
       display:flex;
-      gap:10px;
       flex-wrap:wrap;
+      gap:10px;
       align-items:center;
     }
-    .manualFlag{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 12px;
-      border-radius:12px;
+
+    .weekDates{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .weekDateBtn{
+      border:none;
+      cursor:pointer;
+      padding:12px 14px;
+      border-radius:16px;
       background:#fff;
       border:1px solid var(--line);
-      font-weight:900;
-      font-size:13px;
+      box-shadow:var(--shadow2);
+      min-width:170px;
+      text-align:left;
+      transition:.16s ease;
     }
-    .manualFlag input{
-      width:18px;
-      height:18px;
-      accent-color:var(--brand);
+
+    .weekDateBtn:hover{
+      transform:translateY(-1px);
+    }
+
+    .weekDateBtn.active{
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      border-color:transparent;
+    }
+
+    .weekDateBtn.noData{
+      background:#fff7ed;
+      border-color:#fed7aa;
+    }
+
+    .weekDateBtn .d1{
+      display:block;
+      font-size:12px;
+      font-weight:1000;
+      opacity:.85;
+    }
+
+    .weekDateBtn .d2{
+      display:block;
+      margin-top:4px;
+      font-size:15px;
+      font-weight:1000;
+    }
+
+    .weekDateBtn .d3{
+      display:block;
+      margin-top:6px;
+      font-size:11px;
+      font-weight:900;
+      opacity:.85;
     }
   </style>
 </head>
@@ -490,13 +524,11 @@
       <p>
         Matriz de costos y kilos de producción. Los kilos del día se alimentan desde Hoja de Viaje
         y el costo de <strong>Materia prima</strong> se toma automáticamente desde la facturación del
-        <strong>viaje aplicable</strong> según la fecha seleccionada. Ahora también puedes capturar
-        <strong>kilos manuales</strong> por producto.
+        <strong>viaje aplicable</strong> según la fecha seleccionada.
       </p>
       <div class="toolbar">
         <span class="chip">Vista diaria</span>
         <span class="chip">Kg desde Hoja de Viaje</span>
-        <span class="chip">Kg manual opcional</span>
         <span class="chip">Materia prima por fecha</span>
         <span class="chip">Promedio por fecha visualizada</span>
         <span class="chip">Todos los productos cuentan</span>
@@ -516,7 +548,7 @@
       <article class="kpi">
         <div class="t">Kg totales del día</div>
         <div class="v" id="kpiKg">0</div>
-        <div class="s">Usa kg efectivos: manual o sincronizado</div>
+        <div class="s">Incluye todos los productos del viaje</div>
       </article>
       <article class="kpi">
         <div class="t">Productos activos del día</div>
@@ -526,7 +558,7 @@
       <article class="kpi">
         <div class="t">Costo promedio por kg</div>
         <div class="v" id="kpiAvg">$0</div>
-        <div class="s">Costo total / kg efectivos del día</div>
+        <div class="s">Costo total / kg del día</div>
       </article>
     </section>
 
@@ -579,7 +611,7 @@
       <div class="panelHead">
         <div>
           <h2>Kg Producción</h2>
-          <p>Kilos por producto del día visual, tomados del viaje aplicable, con opción manual por producto.</p>
+          <p>Kilos por producto del día visual, tomados del viaje aplicable.</p>
         </div>
         <div class="panelTools">
           <label style="display:flex;align-items:center;gap:8px;font-weight:1000;">
@@ -587,32 +619,15 @@
             <input type="date" id="kgDate" class="dateInput">
           </label>
           <button class="btn" id="btnSyncKg">Sincronizar ahora</button>
-          <button class="btn ghost" id="btnGuardarManual">Guardar manual</button>
-          <button class="btn warn" id="btnLimpiarManual">Limpiar manual</button>
           <button class="btn secondary" id="btnReset">Restablecer datos</button>
           <span class="badge" id="kgSyncStatus">Sincronizar</span>
         </div>
       </div>
-
-      <div class="manualBar">
-        <div class="left">
-          <label class="manualFlag">
-            <input type="checkbox" id="toggleManualGlobal">
-            <span>Usar captura manual en todos los productos</span>
-          </label>
-        </div>
-        <div class="right">
-          <button class="btn ghost" id="btnActivarManualTodos">Activar manual a todos</button>
-          <button class="btn ghost" id="btnDesactivarManualTodos">Desactivar manual a todos</button>
-        </div>
-      </div>
-
       <div class="tableWrap">
         <table id="tblKg"></table>
       </div>
       <div class="footerNote">
         Aquí se toman los kilos reales de <b>todos los productos del viaje</b>, incluyendo <b>Hígado</b>, <b>Bofe</b> y <b>Sebo</b>.
-        Si activas <b>Usar manual</b>, ese producto tomará el valor capturado manualmente como kg efectivo.
       </div>
     </section>
 
@@ -622,7 +637,7 @@
           <h2>Valor por %</h2>
           <p>
             Reparte el valor total del viaje aplicable por porcentaje, lo divide entre los kilos
-            efectivos del producto y suma costo operativo para obtener el costo final por kg.
+            del producto y suma costo operativo para obtener el costo final por kg.
           </p>
         </div>
         <div class="panelTools">
@@ -631,6 +646,21 @@
           <span class="badge" id="pctValorBadge">Valorizado: $0</span>
           <span class="badge" id="pctSaveStatus">Sin guardar</span>
         </div>
+      </div>
+
+      <div class="weekStrip">
+        <div class="weekHeader">
+          <div class="weekHeaderLeft">
+            <label style="display:flex;align-items:center;gap:8px;font-weight:1000;">
+              Semana base:
+              <input type="date" id="weekBaseDate" class="dateInput">
+            </label>
+            <button class="btn ghost" id="btnLoadWeek">Ver semana</button>
+          </div>
+          <div class="badge" id="weekInfoBadge">Semana actual</div>
+        </div>
+
+        <div id="weekTravelDates" class="weekDates"></div>
       </div>
 
       <div class="tableWrap">
@@ -645,7 +675,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "vdc_costos_html_v9_manual_kg";
+    const STORAGE_KEY = "vdc_costos_html_v9_semana_viajes";
 
     const supabase = window.supabase.createClient(
       'https://rcegikeiaxptolrduguc.supabase.co',
@@ -654,7 +684,7 @@
 
     const supabaseResumen = window.supabase.createClient(
       'https://lujroedkbgffobyblbie.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6ImFub24iLCJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1anJvZWRrYmdmZm9ieWJsYmllIiwiaWF0IjoxNzU1MTg5MzQ4LCJleHAiOjIwNzA3NjUzNDh9.bSbBZeS59aPSEGPj1YGcmZCyQTfgf3fz9pNDuR2ID7c'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1anJvZWRrYmdmZm9ieWJsYmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxODkzNDgsImV4cCI6MjA3MDc2NTM0OH0.bSbBZeS59aPSEGPj1YGcmZCyQTfgf3fz9pNDuR2ID7c'
     );
 
     const HOJA_VIAJE_TABLE = 'hoja_viaje';
@@ -662,6 +692,8 @@
     const VIAJES_OPERACION_TABLE = 'viajes_operacion';
     const COSTOS_PROMEDIO_TABLE = 'costos_promedio_por_fecha';
     const COSTOS_FINALES_TABLE = 'costos_finales_por_producto';
+
+    const EXCLUDED_PRODUCTS = new Set();
 
     const productKeys = [
       "Bofe","Corazon","Tripa","Cabeza","Cuajo","Libro","Menudo","Pata Sucia","Teleco","Higado","Sebo"
@@ -682,22 +714,6 @@
       "Higado": "Higado",
       "Sebo": "Sebo"
     };
-
-    function buildDefaultKgRows(){
-      return [
-        {"producto":"Bofe","kgDia":0,"kgManual":0,"usarManual":0,"fuente":"-"},
-        {"producto":"Corazon","kgDia":0,"kgManual":0,"usarManual":0,"fuente":"-"},
-        {"producto":"Tripa","kgDia":0,"kgManual":0,"usarManual":0,"fuente":"-"},
-        {"producto":"Cabeza","kgDia":0,"kgManual":0,"usarManual":0,"fuente":"-"},
-        {"producto":"Cuajo","kgDia":0,"kgManual":0,"usarManual":0,"fuente":"-"},
-        {"producto":"Libro","kgDia":0,"kgManual":0,"usarManual":0,"fuente":"-"},
-        {"producto":"Menudo","kgDia":0,"kgManual":0,"usarManual":0,"fuente":"-"},
-        {"producto":"Pata Sucia","kgDia":0,"kgManual":0,"usarManual":0,"fuente":"-"},
-        {"producto":"Teleco","kgDia":0,"kgManual":0,"usarManual":0,"fuente":"-"},
-        {"producto":"Higado","kgDia":0,"kgManual":0,"usarManual":0,"fuente":"-"},
-        {"producto":"Sebo","kgDia":0,"kgManual":0,"usarManual":0,"fuente":"-"}
-      ];
-    }
 
     const stateDefault = {
       matriz: [
@@ -753,7 +769,21 @@
         {"concepto":"Cajas fruteras","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":0,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":0,"Teleco":0,"Higado":1,"Sebo":0}},
         {"concepto":"bolsas","costo":0,"marks":{"Bofe":1,"Corazon":1,"Tripa":1,"Cabeza":1,"Cuajo":1,"Libro":1,"Menudo":1,"Pata Sucia":1,"Teleco":1,"Higado":1,"Sebo":1}}
       ],
-      kgProduccion: buildDefaultKgRows(),
+
+      kgProduccion: [
+        {"producto":"Bofe","kgDia":0,"fuente":"-"},
+        {"producto":"Corazon","kgDia":0,"fuente":"-"},
+        {"producto":"Tripa","kgDia":0,"fuente":"-"},
+        {"producto":"Cabeza","kgDia":0,"fuente":"-"},
+        {"producto":"Cuajo","kgDia":0,"fuente":"-"},
+        {"producto":"Libro","kgDia":0,"fuente":"-"},
+        {"producto":"Menudo","kgDia":0,"fuente":"-"},
+        {"producto":"Pata Sucia","kgDia":0,"fuente":"-"},
+        {"producto":"Teleco","kgDia":0,"fuente":"-"},
+        {"producto":"Higado","kgDia":0,"fuente":"-"},
+        {"producto":"Sebo","kgDia":0,"fuente":"-"}
+      ],
+
       valorPct: [
         {"producto":"Cabeza","porcentaje":32.6,"costoOp":4.2},
         {"producto":"Panza","porcentaje":16,"costoOp":4.2},
@@ -766,8 +796,7 @@
         {"producto":"Higado","porcentaje":4.5,"costoOp":4.2},
         {"producto":"Bofe","porcentaje":0.3,"costoOp":4.2},
         {"producto":"Sebo","porcentaje":3.7,"costoOp":0}
-      ],
-      manualGlobal: 0
+      ]
     };
 
     let state = loadState();
@@ -785,35 +814,21 @@
     let saveCostoPromedioTimer = null;
     let saveCostosFinalesTimer = null;
 
-    function structuredCloneSafe(v){
-      return JSON.parse(JSON.stringify(v));
-    }
+    let selectedViajeDateOverride = null;
+    let weekTravelButtons = [];
 
     function loadState(){
       const saved = localStorage.getItem(STORAGE_KEY);
       if(saved){
         try{
           const parsed = JSON.parse(saved);
-          if(!parsed.matriz) parsed.matriz = structuredCloneSafe(stateDefault.matriz);
-          if(!parsed.kgProduccion) parsed.kgProduccion = buildDefaultKgRows();
-          if(!parsed.valorPct) parsed.valorPct = structuredCloneSafe(stateDefault.valorPct);
-          if(typeof parsed.manualGlobal === 'undefined') parsed.manualGlobal = 0;
-
-          parsed.kgProduccion = productKeys.map(p => {
-            const found = (parsed.kgProduccion || []).find(x => x.producto === p) || {};
-            return {
-              producto: p,
-              kgDia: Number(found.kgDia || 0),
-              kgManual: Number(found.kgManual || 0),
-              usarManual: Number(found.usarManual || 0),
-              fuente: found.fuente || '-'
-            };
-          });
-
+          if(!parsed.matriz) parsed.matriz = structuredClone(stateDefault.matriz);
+          if(!parsed.kgProduccion) parsed.kgProduccion = structuredClone(stateDefault.kgProduccion);
+          if(!parsed.valorPct) parsed.valorPct = structuredClone(stateDefault.valorPct);
           return parsed;
         }catch(e){}
       }
-      return structuredCloneSafe(stateDefault);
+      return structuredClone(stateDefault);
     }
 
     function saveState(){
@@ -859,17 +874,7 @@
 
     function ensureKgRows(){
       const current = new Map((state.kgProduccion || []).map(r => [r.producto, r]));
-      state.kgProduccion = productKeys.map(p => {
-        const found = current.get(p) || {};
-        return {
-          producto:p,
-          kgDia:Number(found.kgDia || 0),
-          kgManual:Number(found.kgManual || 0),
-          usarManual:Number(found.usarManual || 0),
-          fuente:found.fuente || '-'
-        };
-      });
-      if(typeof state.manualGlobal === 'undefined') state.manualGlobal = 0;
+      state.kgProduccion = productKeys.map(p => current.get(p) || { producto:p, kgDia:0, fuente:'-' });
     }
 
     function normalizeLineas(lineas){
@@ -900,6 +905,15 @@
       return copy;
     }
 
+    function getDayShortName(dateStr){
+      const d = toLocalDateParts(dateStr);
+      return ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][d.getDay()];
+    }
+
+    function getCurrentSelectedDate(){
+      return document.getElementById('kgDate')?.value || todayISO();
+    }
+
     function getApplicableViajeDate(selectedDateStr){
       const date = toLocalDateParts(selectedDateStr);
       const day = date.getDay();
@@ -924,6 +938,100 @@
       return formatDateLocal(viajeDate);
     }
 
+    function getCurrentViajeDate(){
+      return selectedViajeDateOverride || getApplicableViajeDate(getCurrentSelectedDate());
+    }
+
+    function getStartOfWeek(dateStr){
+      const base = toLocalDateParts(dateStr);
+      const day = base.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      return addDays(base, diff);
+    }
+
+    function getWeekRange(dateStr){
+      const start = getStartOfWeek(dateStr);
+      const end = addDays(start, 6);
+      return {
+        startDate: start,
+        endDate: end,
+        start: formatDateLocal(start),
+        end: formatDateLocal(end)
+      };
+    }
+
+    function getScheduledTravelDatesInWeek(baseDateStr){
+      const weekStart = getStartOfWeek(baseDateStr);
+      return [
+        formatDateLocal(addDays(weekStart, 1)), // martes
+        formatDateLocal(addDays(weekStart, 3)), // jueves
+        formatDateLocal(addDays(weekStart, 4))  // viernes
+      ];
+    }
+
+    async function loadWeekTravelDates(baseDateStr){
+      const refDate = baseDateStr || getCurrentSelectedDate();
+      const { start, end } = getWeekRange(refDate);
+
+      const { data, error } = await supabaseResumen
+        .from(VIAJES_OPERACION_TABLE)
+        .select('fecha')
+        .gte('fecha', start)
+        .lte('fecha', end)
+        .order('fecha', { ascending: true });
+
+      const foundSet = new Set((data || []).map(r => r.fecha));
+      const scheduled = getScheduledTravelDatesInWeek(refDate);
+
+      weekTravelButtons = scheduled.map(fecha => ({
+        fecha,
+        hasData: foundSet.has(fecha)
+      }));
+
+      renderWeekTravelDates();
+    }
+
+    function renderWeekTravelDates(){
+      const box = document.getElementById('weekTravelDates');
+      const badge = document.getElementById('weekInfoBadge');
+      if(!box) return;
+
+      const baseDate = document.getElementById('weekBaseDate')?.value || getCurrentSelectedDate();
+      const { start, end } = getWeekRange(baseDate);
+
+      if(badge){
+        badge.textContent = `Semana: ${start} a ${end}`;
+      }
+
+      box.innerHTML = weekTravelButtons.map(item => {
+        const active = getCurrentViajeDate() === item.fecha;
+        return `
+          <button
+            class="weekDateBtn ${active ? 'active' : ''} ${item.hasData ? '' : 'noData'}"
+            data-viaje-date="${item.fecha}"
+          >
+            <span class="d1">${getDayShortName(item.fecha)}</span>
+            <span class="d2">${item.fecha}</span>
+            <span class="d3">${item.hasData ? 'Con viaje' : 'Sin datos'}</span>
+          </button>
+        `;
+      }).join('');
+
+      box.querySelectorAll('[data-viaje-date]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const viajeDate = btn.dataset.viajeDate;
+          selectedViajeDateOverride = viajeDate;
+
+          const kgDate = document.getElementById('kgDate');
+          if(kgDate) kgDate.value = viajeDate;
+
+          await syncKgForSelectedDate(false, true);
+          subscribeViajesOperacionRealtime();
+          renderWeekTravelDates();
+        });
+      });
+    }
+
     function extractKgFromResultados(resultados){
       const acumulado = buildEmptyDayRows();
 
@@ -939,35 +1047,16 @@
     }
 
     function rowsFromAccumulated(acumulado, fuente){
-      const currentMap = new Map((state.kgProduccion || []).map(r => [r.producto, r]));
-      return productKeys.map(producto => {
-        const prev = currentMap.get(producto) || {};
-        return {
-          producto,
-          kgDia: Number(acumulado[producto]?.kgDia || 0),
-          kgManual: Number(prev.kgManual || 0),
-          usarManual: Number(prev.usarManual || 0),
-          fuente
-        };
-      });
-    }
-
-    function getKgEfectivoRow(row){
-      const usar = Number(state.manualGlobal || 0) === 1 || Number(row.usarManual || 0) === 1;
-      return usar ? Number(row.kgManual || 0) : Number(row.kgDia || 0);
-    }
-
-    function getKgMapEffective(){
-      const map = {};
-      (state.kgProduccion || []).forEach(r => {
-        map[r.producto] = getKgEfectivoRow(r);
-      });
-      return map;
+      return productKeys.map(producto => ({
+        producto,
+        kgDia: Number(acumulado[producto]?.kgDia || 0),
+        fuente
+      }));
     }
 
     async function getMateriaPrimaFromSupabase(){
-      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+      const fechaSeleccionada = getCurrentSelectedDate();
+      const fechaViajeAplicable = getCurrentViajeDate();
 
       const { data, error } = await supabaseResumen
         .from(VIAJES_OPERACION_TABLE)
@@ -1000,8 +1089,8 @@
     }
 
     async function saveCostoPromedioActual(valor, totalCost, totalKg){
-      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+      const fechaSeleccionada = getCurrentSelectedDate();
+      const fechaViajeAplicable = getCurrentViajeDate();
 
       const payload = {
         fecha: fechaSeleccionada,
@@ -1027,9 +1116,9 @@
       }, 350);
     }
 
-    async function syncKgForSelectedDate(showAlert = false){
-      const selectedDate = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(selectedDate);
+    async function syncKgForSelectedDate(showAlert = false, usingDirectTravelDate = false){
+      const selectedDate = getCurrentSelectedDate();
+      const fechaViajeAplicable = getCurrentViajeDate();
 
       setKgSyncStatus(`Sincronizando viaje ${fechaViajeAplicable}...`, true);
 
@@ -1082,7 +1171,7 @@
         setKgSyncStatus(`Viaje aplicado: ${fechaViajeAplicable}`, true);
 
         if(showAlert){
-          alert(`Kg cargados desde hoja_viaje del viaje aplicable ${fechaViajeAplicable}.`);
+          alert(`Kg cargados desde hoja_viaje del viaje ${fechaViajeAplicable}.`);
         }
         return;
       }
@@ -1098,29 +1187,23 @@
         setKgSyncStatus(`Live viaje: ${fechaViajeAplicable}`, true);
 
         if(showAlert){
-          alert(`Kg cargados desde hoja_viaje_live del viaje aplicable ${fechaViajeAplicable}.`);
+          alert(`Kg cargados desde hoja_viaje_live del viaje ${fechaViajeAplicable}.`);
         }
         return;
       }
 
-      const currentMap = new Map((state.kgProduccion || []).map(r => [r.producto, r]));
-      state.kgProduccion = productKeys.map(producto => {
-        const prev = currentMap.get(producto) || {};
-        return {
-          producto,
-          kgDia: 0,
-          kgManual: Number(prev.kgManual || 0),
-          usarManual: Number(prev.usarManual || 0),
-          fuente: `sin datos (${fechaViajeAplicable})`
-        };
-      });
+      state.kgProduccion = productKeys.map(producto => ({
+        producto,
+        kgDia: 0,
+        fuente: `sin datos (${fechaViajeAplicable})`
+      }));
 
       await setMateriaPrimaCostForSelectedDate();
       rerenderAll();
       setKgSyncStatus(`Sin datos viaje ${fechaViajeAplicable}`, false);
 
       if(showAlert){
-        alert(`No hay datos en hoja de viaje para el viaje aplicable ${fechaViajeAplicable}.`);
+        alert(`No hay datos en hoja de viaje para ${fechaViajeAplicable}.`);
       }
     }
 
@@ -1161,8 +1244,7 @@
         viajesOperacionSub = null;
       }
 
-      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+      const fechaViajeAplicable = getCurrentViajeDate();
 
       viajesOperacionSub = supabaseResumen
         .from(`${VIAJES_OPERACION_TABLE}:fecha=eq.${fechaViajeAplicable}`)
@@ -1193,7 +1275,10 @@
     }
 
     function calculateResultados(){
-      const kgMap = getKgMapEffective();
+      const kgMap = {};
+      state.kgProduccion.forEach(r=>{
+        kgMap[r.producto] = Number(r.kgDia||0);
+      });
 
       const out = productKeys.map(p => ({
         producto:p,
@@ -1302,56 +1387,29 @@
 
     function renderKg(){
       const tbl = document.getElementById('tblKg');
-      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
-
-      const toggleGlobal = document.getElementById('toggleManualGlobal');
-      if(toggleGlobal) toggleGlobal.checked = Number(state.manualGlobal || 0) === 1;
+      const fechaSeleccionada = getCurrentSelectedDate();
+      const fechaViajeAplicable = getCurrentViajeDate();
 
       tbl.innerHTML = `
         <thead>
           <tr>
             <th class="stickyCol">Producto</th>
-            <th>Kg sincronizado</th>
-            <th>Kg manual</th>
-            <th>Usar manual</th>
-            <th>Kg efectivo</th>
-            <th>Modo</th>
+            <th>Kg/día</th>
             <th>Fuente</th>
             <th>Fecha visual</th>
             <th>Viaje aplicado</th>
           </tr>
         </thead>
         <tbody>
-          ${state.kgProduccion.map((row, i)=>{
-            const usar = Number(state.manualGlobal || 0) === 1 || Number(row.usarManual || 0) === 1;
-            const kgEfectivo = getKgEfectivoRow(row);
-            return `
-              <tr>
-                <td class="stickyCol"><b>${row.producto}</b></td>
-                <td class="num"><b>${formatPlain(row.kgDia || 0)}</b></td>
-                <td class="num">
-                  <input
-                    class="inputNum"
-                    type="number"
-                    step="0.01"
-                    value="${Number(row.kgManual || 0)}"
-                    onchange="updateKgManual(${i}, this.value)"
-                  />
-                </td>
-                <td class="checkCell">
-                  <input type="checkbox" ${Number(row.usarManual || 0) === 1 ? 'checked' : ''} onchange="toggleUsarManual(${i}, this.checked)" />
-                </td>
-                <td class="num resultGood"><b>${formatPlain(kgEfectivo)}</b></td>
-                <td class="center">
-                  ${usar ? '<span class="resultWarn">Manual</span>' : '<span class="resultInfo">Sincronizado</span>'}
-                </td>
-                <td class="center">${row.fuente || '-'}</td>
-                <td class="center">${fechaSeleccionada}</td>
-                <td class="center">${fechaViajeAplicable}</td>
-              </tr>
-            `;
-          }).join('')}
+          ${state.kgProduccion.map((row)=>`
+            <tr>
+              <td class="stickyCol"><b>${row.producto}</b></td>
+              <td class="num"><b>${formatPlain(row.kgDia || 0)}</b></td>
+              <td class="center">${row.fuente || '-'}</td>
+              <td class="center">${fechaSeleccionada}</td>
+              <td class="center">${fechaViajeAplicable}</td>
+            </tr>
+          `).join('')}
         </tbody>
       `;
     }
@@ -1359,6 +1417,14 @@
     function getMateriaPrimaActual(){
       const row = state.matriz.find(r => String(r.concepto).trim().toLowerCase() === 'materia prima');
       return Number(row?.costo || 0);
+    }
+
+    function getKgMapAll(){
+      const map = {};
+      (state.kgProduccion || []).forEach(r => {
+        map[r.producto] = Number(r.kgDia || 0);
+      });
+      return map;
     }
 
     function getKgForValorPct(producto, kgMap){
@@ -1369,7 +1435,7 @@
 
     function calculateValorPct(){
       const totalBase = getMateriaPrimaActual();
-      const kgMap = getKgMapEffective();
+      const kgMap = getKgMapAll();
 
       const rows = (state.valorPct || []).map(r => {
         const porcentaje = Number(r.porcentaje || 0);
@@ -1400,8 +1466,8 @@
     }
 
     async function saveCostosFinalesPorProducto(){
-      const fechaSeleccionada = document.getElementById('kgDate')?.value || todayISO();
-      const fechaViajeAplicable = getApplicableViajeDate(fechaSeleccionada);
+      const fechaSeleccionada = getCurrentSelectedDate();
+      const fechaViajeAplicable = getCurrentViajeDate();
       const calc = calculateValorPct();
 
       const payload = calc.rows.map(row => ({
@@ -1510,11 +1576,11 @@
     }
 
     function rerenderAll(){
-      ensureKgRows();
       updateKPIs();
       renderMatriz();
       renderKg();
       renderValorPct();
+      renderWeekTravelDates();
       saveState();
       scheduleSaveCostosFinales();
     }
@@ -1547,18 +1613,6 @@
     window.updateValorPct = function(index, field, value){
       if(!state.valorPct || !state.valorPct[index]) return;
       state.valorPct[index][field] = Number(value || 0);
-      rerenderAll();
-    };
-
-    window.updateKgManual = function(index, value){
-      if(!state.kgProduccion || !state.kgProduccion[index]) return;
-      state.kgProduccion[index].kgManual = Number(value || 0);
-      rerenderAll();
-    };
-
-    window.toggleUsarManual = function(index, checked){
-      if(!state.kgProduccion || !state.kgProduccion[index]) return;
-      state.kgProduccion[index].usarManual = checked ? 1 : 0;
       rerenderAll();
     };
 
@@ -1599,37 +1653,6 @@
       rerenderAll();
     }
 
-    function guardarManualEnNavegador(){
-      saveState();
-      setKgSyncStatus('Kg manual guardado en navegador', true);
-      alert('Los kilos manuales quedaron guardados en este navegador.');
-    }
-
-    function limpiarManual(){
-      const ok = confirm('¿Seguro que quieres limpiar todos los kg manuales y desactivar manual?');
-      if(!ok) return;
-
-      state.manualGlobal = 0;
-      state.kgProduccion = (state.kgProduccion || []).map(r => ({
-        ...r,
-        kgManual: 0,
-        usarManual: 0
-      }));
-
-      rerenderAll();
-      setKgSyncStatus('Kg manual limpiado', true);
-    }
-
-    function activarManualTodos(){
-      state.kgProduccion.forEach(r => r.usarManual = 1);
-      rerenderAll();
-    }
-
-    function desactivarManualTodos(){
-      state.kgProduccion.forEach(r => r.usarManual = 0);
-      rerenderAll();
-    }
-
     document.getElementById('btnAgregarCosto').addEventListener('click', addNewCosto);
 
     document.getElementById('btnMarcarTodos').addEventListener('click', ()=>{
@@ -1645,16 +1668,6 @@
       alert('Datos guardados en este navegador.');
     });
 
-    document.getElementById('btnGuardarManual').addEventListener('click', guardarManualEnNavegador);
-    document.getElementById('btnLimpiarManual').addEventListener('click', limpiarManual);
-    document.getElementById('btnActivarManualTodos').addEventListener('click', activarManualTodos);
-    document.getElementById('btnDesactivarManualTodos').addEventListener('click', desactivarManualTodos);
-
-    document.getElementById('toggleManualGlobal').addEventListener('change', (e)=>{
-      state.manualGlobal = e.target.checked ? 1 : 0;
-      rerenderAll();
-    });
-
     document.getElementById('btnExportJson').addEventListener('click', ()=>{
       const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
       const a = document.createElement('a');
@@ -1666,11 +1679,13 @@
 
     document.getElementById('btnReset').addEventListener('click', async ()=>{
       if(!confirm('¿Seguro que quieres restablecer los datos originales del archivo nuevo?')) return;
-      state = structuredCloneSafe(stateDefault);
+      state = structuredClone(stateDefault);
       localStorage.removeItem(STORAGE_KEY);
+      selectedViajeDateOverride = null;
       await setMateriaPrimaCostForSelectedDate();
       rerenderAll();
       await syncKgForSelectedDate(false);
+      await loadWeekTravelDates(document.getElementById('weekBaseDate')?.value || todayISO());
       subscribeViajesOperacionRealtime();
     });
 
@@ -1681,15 +1696,26 @@
     });
 
     document.getElementById('kgDate').addEventListener('change', async ()=>{
+      selectedViajeDateOverride = null;
+      const value = document.getElementById('kgDate').value || todayISO();
+      const weekBaseDate = document.getElementById('weekBaseDate');
+      if(weekBaseDate) weekBaseDate.value = value;
       await syncKgForSelectedDate(false);
+      await loadWeekTravelDates(value);
       subscribeViajesOperacionRealtime();
     });
 
-    document.addEventListener('DOMContentLoaded', async ()=>{
-      ensureKgRows();
+    document.getElementById('btnLoadWeek').addEventListener('click', async ()=>{
+      const base = document.getElementById('weekBaseDate')?.value || todayISO();
+      await loadWeekTravelDates(base);
+    });
 
+    document.addEventListener('DOMContentLoaded', async ()=>{
       const dateInput = document.getElementById('kgDate');
       if(dateInput) dateInput.value = todayISO();
+
+      const weekBaseDate = document.getElementById('weekBaseDate');
+      if(weekBaseDate) weekBaseDate.value = todayISO();
 
       renderTabs();
       renderNewCostChecks();
@@ -1697,6 +1723,8 @@
       rerenderAll();
 
       await syncKgForSelectedDate(false);
+      await loadWeekTravelDates(todayISO());
+
       subscribeHojaViajeRealtime();
       subscribeHojaViajeLiveRealtime();
       subscribeViajesOperacionRealtime();
