@@ -645,6 +645,7 @@
           <span class="badge" id="pctBaseBadge">Base: $0</span>
           <span class="badge" id="pctValorBadge">Valorizado: $0</span>
           <span class="badge" id="pctSaveStatus">Sin guardar</span>
+          <button class="btn secondary" id="btnWhatsappSemana">Enviar semana por WhatsApp</button>
         </div>
       </div>
 
@@ -675,7 +676,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "vdc_costos_html_v9_semana_viajes";
+    const STORAGE_KEY = "vdc_costos_html_v10_whatsapp_semana";
 
     const supabase = window.supabase.createClient(
       'https://rcegikeiaxptolrduguc.supabase.co',
@@ -692,8 +693,6 @@
     const VIAJES_OPERACION_TABLE = 'viajes_operacion';
     const COSTOS_PROMEDIO_TABLE = 'costos_promedio_por_fecha';
     const COSTOS_FINALES_TABLE = 'costos_finales_por_producto';
-
-    const EXCLUDED_PRODUCTS = new Set();
 
     const productKeys = [
       "Bofe","Corazon","Tripa","Cabeza","Cuajo","Libro","Menudo","Pata Sucia","Teleco","Higado","Sebo"
@@ -1055,7 +1054,6 @@
     }
 
     async function getMateriaPrimaFromSupabase(){
-      const fechaSeleccionada = getCurrentSelectedDate();
       const fechaViajeAplicable = getCurrentViajeDate();
 
       const { data, error } = await supabaseResumen
@@ -1117,7 +1115,6 @@
     }
 
     async function syncKgForSelectedDate(showAlert = false, usingDirectTravelDate = false){
-      const selectedDate = getCurrentSelectedDate();
       const fechaViajeAplicable = getCurrentViajeDate();
 
       setKgSyncStatus(`Sincronizando viaje ${fechaViajeAplicable}...`, true);
@@ -1653,6 +1650,199 @@
       rerenderAll();
     }
 
+    async function getKgRowsForViajeDate(fechaViaje){
+      const [savedResp, liveResp] = await Promise.all([
+        supabase
+          .from(HOJA_VIAJE_TABLE)
+          .select('fecha, resultados')
+          .eq('fecha', fechaViaje)
+          .order('fecha', { ascending:false }),
+
+        supabase
+          .from(HOJA_VIAJE_LIVE_TABLE)
+          .select('id, fecha, data, updated_at')
+          .eq('fecha', fechaViaje)
+          .order('updated_at', { ascending:false })
+      ]);
+
+      const acumulado = buildEmptyDayRows();
+
+      if(savedResp.error){
+        console.error('Error leyendo hoja_viaje semanal:', savedResp.error);
+      }
+
+      if(liveResp.error){
+        console.error('Error leyendo hoja_viaje_live semanal:', liveResp.error);
+      }
+
+      if(savedResp.data && savedResp.data.length > 0){
+        savedResp.data.forEach(row => {
+          const acc = extractKgFromResultados(row.resultados || {});
+          productKeys.forEach(p => {
+            acumulado[p].kgDia += Number(acc[p]?.kgDia || 0);
+          });
+        });
+
+        return rowsFromAccumulated(acumulado, `guardado (${fechaViaje})`);
+      }
+
+      if(liveResp.data && liveResp.data.length > 0){
+        const latestLive = liveResp.data[0];
+        const accLive = extractKgFromResultados(latestLive?.data?.resultados || {});
+        return rowsFromAccumulated(accLive, `live (${fechaViaje})`);
+      }
+
+      return productKeys.map(producto => ({
+        producto,
+        kgDia: 0,
+        fuente: `sin datos (${fechaViaje})`
+      }));
+    }
+
+    async function getMateriaPrimaByViajeDate(fechaViaje){
+      const { data, error } = await supabaseResumen
+        .from(VIAJES_OPERACION_TABLE)
+        .select('kilos, precio_kg, costo_dia')
+        .eq('fecha', fechaViaje);
+
+      if(error){
+        console.error('Error materia prima semanal:', error);
+        return 0;
+      }
+
+      let total = 0;
+
+      (data || []).forEach(row => {
+        const kilos = Number(row.kilos || 0);
+        const precioKg = Number(row.precio_kg || 0);
+        const costoDia = Number(row.costo_dia || 0);
+        total += (kilos * precioKg) + costoDia;
+      });
+
+      return total;
+    }
+
+    function calculateValorPctForRows(kgRows, materiaPrima){
+      const kgMap = {};
+      kgRows.forEach(r => {
+        kgMap[r.producto] = Number(r.kgDia || 0);
+      });
+
+      return (state.valorPct || []).map(r => {
+        const porcentaje = Number(r.porcentaje || 0);
+        const costoOp = Number(r.costoOp || 0);
+        const kg = getKgForValorPct(r.producto, kgMap);
+        const valorAsignado = materiaPrima * (porcentaje / 100);
+        const precioBase = kg > 0 ? valorAsignado / kg : 0;
+        const costoFinal = precioBase + costoOp;
+
+        return {
+          producto: r.producto,
+          porcentaje,
+          kg,
+          valorAsignado,
+          precioBase,
+          costoOp,
+          costoFinal
+        };
+      });
+    }
+
+    async function buildWhatsappSemana(){
+      const base = document.getElementById('weekBaseDate')?.value || getCurrentSelectedDate();
+      const { start, end } = getWeekRange(base);
+      const fechasViaje = getScheduledTravelDatesInWeek(base);
+
+      let texto = `*RESUMEN SEMANAL VDC 360°*\n`;
+      texto += `Semana: ${start} a ${end}\n`;
+      texto += `Viajes revisados: ${fechasViaje.join(', ')}\n\n`;
+
+      let totalSemanaKg = 0;
+      let totalSemanaMateria = 0;
+      let totalSemanaValor = 0;
+
+      const acumuladoProductos = {};
+
+      state.valorPct.forEach(p => {
+        acumuladoProductos[p.producto] = {
+          kg: 0,
+          valorAsignado: 0,
+          costoFinalSum: 0,
+          diasConKg: 0
+        };
+      });
+
+      for(const fechaViaje of fechasViaje){
+        const kgRows = await getKgRowsForViajeDate(fechaViaje);
+        const materiaPrima = await getMateriaPrimaByViajeDate(fechaViaje);
+        const rows = calculateValorPctForRows(kgRows, materiaPrima);
+
+        const kgDia = rows.reduce((a,b) => a + Number(b.kg || 0), 0);
+        const valorDia = rows.reduce((a,b) => a + Number(b.valorAsignado || 0), 0);
+
+        totalSemanaKg += kgDia;
+        totalSemanaMateria += materiaPrima;
+        totalSemanaValor += valorDia;
+
+        texto += `*${getDayShortName(fechaViaje)} ${fechaViaje}*\n`;
+        texto += `Materia prima: ${formatMoney(materiaPrima)}\n`;
+        texto += `Kg valorizados: ${formatPlain(kgDia)} kg\n`;
+        texto += `Valor asignado: ${formatMoney(valorDia)}\n`;
+
+        rows.forEach(row => {
+          if(!acumuladoProductos[row.producto]) return;
+
+          acumuladoProductos[row.producto].kg += Number(row.kg || 0);
+          acumuladoProductos[row.producto].valorAsignado += Number(row.valorAsignado || 0);
+
+          if(Number(row.kg || 0) > 0){
+            acumuladoProductos[row.producto].costoFinalSum += Number(row.costoFinal || 0);
+            acumuladoProductos[row.producto].diasConKg += 1;
+          }
+
+          texto += `• ${row.producto}: ${formatPlain(row.kg)} kg | ${formatPlain(row.porcentaje)}% | Valor ${formatMoney(row.valorAsignado)} | Base ${formatMoney(row.precioBase)} | Op ${formatMoney(row.costoOp)} | Final ${formatMoney(row.costoFinal)}\n`;
+        });
+
+        texto += `\n`;
+      }
+
+      texto += `*TOTALES DE LA SEMANA*\n`;
+      texto += `Materia prima total: ${formatMoney(totalSemanaMateria)}\n`;
+      texto += `Kg totales valorizados: ${formatPlain(totalSemanaKg)} kg\n`;
+      texto += `Valor total asignado: ${formatMoney(totalSemanaValor)}\n\n`;
+
+      texto += `*ACUMULADO POR PRODUCTO*\n`;
+
+      Object.entries(acumuladoProductos).forEach(([producto, r]) => {
+        const costoPromedioFinal = r.diasConKg > 0 ? r.costoFinalSum / r.diasConKg : 0;
+        texto += `• ${producto}: ${formatPlain(r.kg)} kg | Valor ${formatMoney(r.valorAsignado)} | Costo final prom. ${formatMoney(costoPromedioFinal)}\n`;
+      });
+
+      return texto;
+    }
+
+    async function enviarWhatsappSemana(){
+      const btn = document.getElementById('btnWhatsappSemana');
+      if(btn){
+        btn.disabled = true;
+        btn.textContent = 'Preparando resumen...';
+      }
+
+      try{
+        const texto = await buildWhatsappSemana();
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+        window.open(url, '_blank');
+      }catch(error){
+        console.error(error);
+        alert('No se pudo generar el resumen semanal.');
+      }finally{
+        if(btn){
+          btn.disabled = false;
+          btn.textContent = 'Enviar semana por WhatsApp';
+        }
+      }
+    }
+
     document.getElementById('btnAgregarCosto').addEventListener('click', addNewCosto);
 
     document.getElementById('btnMarcarTodos').addEventListener('click', ()=>{
@@ -1710,6 +1900,8 @@
       await loadWeekTravelDates(base);
     });
 
+    document.getElementById('btnWhatsappSemana').addEventListener('click', enviarWhatsappSemana);
+
     document.addEventListener('DOMContentLoaded', async ()=>{
       const dateInput = document.getElementById('kgDate');
       if(dateInput) dateInput.value = todayISO();
@@ -1731,4 +1923,10 @@
     });
   </script>
 </body>
-</html>
+</html>'''
+
+path = '/mnt/data/costo-vdc360-whatsapp-semana.html'
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(html)
+
+print(path)
