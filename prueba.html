@@ -528,6 +528,7 @@
       </p>
       <div class="toolbar">
         <span class="chip">Vista diaria</span>
+        <span class="chip">4 viajes: mar-mié-jue-vie</span>
         <span class="chip">Kg desde Hoja de Viaje</span>
         <span class="chip">Materia prima por fecha</span>
         <span class="chip">Promedio por fecha visualizada</span>
@@ -918,20 +919,25 @@
       const day = date.getDay();
       let viajeDate;
 
+      // Nueva teoría con 4 viajes:
+      // Martes -> se usa miércoles
+      // Miércoles -> se usa jueves
+      // Jueves -> se usa viernes
+      // Viernes -> se usa sábado, lunes y martes
       if(day === 1){
-        viajeDate = addDays(date, -3);
+        viajeDate = addDays(date, -3); // lunes usa viaje del viernes anterior
       } else if(day === 2){
-        viajeDate = addDays(date, -4);
+        viajeDate = addDays(date, -4); // martes usa viaje del viernes anterior
       } else if(day === 3){
-        viajeDate = addDays(date, -1);
+        viajeDate = addDays(date, -1); // miércoles usa viaje del martes
       } else if(day === 4){
-        viajeDate = addDays(date, -2);
+        viajeDate = addDays(date, -1); // jueves usa viaje del miércoles
       } else if(day === 5){
-        viajeDate = addDays(date, -1);
+        viajeDate = addDays(date, -1); // viernes usa viaje del jueves
       } else if(day === 6){
-        viajeDate = addDays(date, -1);
+        viajeDate = addDays(date, -1); // sábado usa viaje del viernes
       } else {
-        viajeDate = addDays(date, -2);
+        viajeDate = addDays(date, -2); // domingo queda ligado al viaje del viernes
       }
 
       return formatDateLocal(viajeDate);
@@ -963,6 +969,7 @@
       const weekStart = getStartOfWeek(baseDateStr);
       return [
         formatDateLocal(addDays(weekStart, 1)), // martes
+        formatDateLocal(addDays(weekStart, 2)), // miércoles
         formatDateLocal(addDays(weekStart, 3)), // jueves
         formatDateLocal(addDays(weekStart, 4))  // viernes
       ];
@@ -1924,4 +1931,3 @@
   </script>
 </body>
 </html>'''
-
